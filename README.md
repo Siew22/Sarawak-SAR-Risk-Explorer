@@ -46,4 +46,4 @@ Inspired by the immersive experience of professional meteorological platforms, t
 
 ##  Team Members
 
-- [Chiu_Siew_Seng/Team_Miracle] - [Team_leader,Lead Developer,AI_Developer_Frontend_Developer,and Backend_Developer]
+- [Chiu_Siew_Seng,Andrew_/Team_Miracle] - [Team_leader,Lead Developer,AI_Developer_Frontend_Developer,and Backend_Developer]
