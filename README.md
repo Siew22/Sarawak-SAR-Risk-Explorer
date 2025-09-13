@@ -1,7 +1,7 @@
 # SAR-Weather Risk Explorer: A Dynamic Earth Observation Platform
 
-[![NASA Space Apps 2025](https://img.shields.io/badge/NASA%20Space%20Apps-Sarawak%202025-blue.svg)](https://www.spaceappschallenge.org/)
-[![Challenge](https://img.shields.io/badge/Challenge-Through%20the%20Radar%20Looking%20Glass-green.svg)](https://www.spaceappschallenge.org/2024/challenges/through-the-radar-looking-glass-revealing-earth-processes-with-sar/)
+![NASA Space Apps 2025](https://img.shields.io/badge/NASA_Space_Apps-Sarawak_2025-blue)
+![Challenge](https://img.shields.io/badge/Challenge-Through_the_Radar_Looking_Glass-green)
 
 An interactive, real-time platform designed to assess flood risk by intelligently fusing historical SAR (Synthetic Aperture Radar) data with live weather forecasts. This project is a submission for the **NASA Space Apps Sarawak 2025** event.
 
