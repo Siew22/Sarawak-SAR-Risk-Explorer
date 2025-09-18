@@ -17,6 +17,29 @@ This project is a submission for the **"Through the Radar Looking Glass: Reveali
 
 ---
 
+Our Approach to the Challenge
+
+The "Through the Radar Looking Glass" challenge is not just about processing SAR data; it's a call to become a data detective. It asks us to solve riddles hidden within radar imagery, to hypothesize about the unseen forces shaping our planet, and to tell a compelling story with our findings. Our platform was architected from the ground up to answer these core questions.
+
+#### **Challenge: "What can you hypothesize about the physical drivers behind what you see?"**
+
+**Our Solution: An Explainable AI (XAI) Engine.** We moved beyond simple change detection. Our platform automatically fuses the **effect** (a flood detected by SAR) with its most likely **cause** (extreme precipitation from weather data). The result is an instant, evidence-based hypothesis generated for any location, such as: *"The flood risk is High because this area is historically vulnerable (proven by SAR) AND a significant rainfall event is forecasted (the physical driver)."*
+
+#### **Challenge: "Can you tell the trees and the water apart? Can you detect how the forest is changing over time?"**
+
+**Our Solution: A "Zero-Input" Dual-Core Analysis Engine.** We recognized that a user shouldn't need to be an expert to detect change.
+*   **For Water:** Our multi-criteria flood algorithm intelligently distinguishes new floodwater from permanent water bodies using the JRC Global Surface Water dataset.
+*   **For Forests:** Our "Deforestation" mode requires **no date input**. It smartly compares the most recent three months against the same period from the previous year, using both SAR (for structural change) and optical NDVI (for vegetation health) to robustly detect and quantify changes over time.
+
+#### **Challenge: "How will you present your findings? Don't forget to focus on compelling storytelling..."**
+
+**Our Solution: An Immersive, Interactive Data-Storytelling Platform.** We rejected static reports. Inspired by Windy.com, our platform turns every analysis into an interactive story.
+*   **The Map is the Narrative:** Results are not just numbers in a box; they are living layers on a dynamic map.
+*   **Context is King:** The user can instantly switch between our unique SAR analysis, live weather radar, and various forecast layers, exploring the full context of the story from every angle.
+*   **The Story Unfolds On-Demand:** Every click on the map generates a new, unique story for that specific location, empowering users to become explorers of their own environment.
+
+---
+
 ## ✨ Core Features
 
 Our platform is built on three foundational pillars: **On-Demand Analysis**, **Intelligent Fusion**, and **Immersive Experience**.
