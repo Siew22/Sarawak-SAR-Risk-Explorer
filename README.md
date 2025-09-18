@@ -1,8 +1,8 @@
 # Global SAR-Weather Risk & Change Explorer
 
-![NASA Space Apps 2025](https://img.shields.io/badge/NASA_Space_Apps-Sarawak_2025-blue)
-![Challenge](https://img.shields.io/badge/Challenge-Through_the_Radar_Looking_Glass-green)
-![Status](https://img.shields.io/badge/Status-Completed-success)
+![NASA Space Apps 2025](https://img.shields.io/badge/NASA_Space_Apps-Sarawak_2025-blue?style=for-the-badge)
+![Challenge](https://img.shields.io/badge/Challenge-Through_the_Radar_Looking_Glass-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
 
 **A Windy.com-inspired, dual-core analysis platform that fuses historical SAR data with real-time weather to provide on-demand, explainable insights into global flood risks and deforestation.**
 
@@ -12,7 +12,7 @@ This project is a submission for the **"Through the Radar Looking Glass: Reveali
 
 ## 🚀 Live Demo & Presentation
 
-[![Project Demo GIF](https://github.com/user-attachments/assets/05b1853d-24ea-426b-8032-6a6c0e5a9172)](https://www.youtube.com/watch?v=dQw4w9WgXcQ) 
+[![Project Demo GIF]([PASTE_YOUR_GIF_LINK_HERE])]([PASTE_A_LINK_TO_YOUR_YOUTUBE_DEMO_VIDEO_HERE]) 
 *Click the image above to watch a full video demonstration of our platform in action.*
 
 ---
@@ -29,15 +29,13 @@ Seamlessly switch between two powerful, on-demand analysis modes with a single c
     *   **Predictive Insight:** Fuses this vulnerability index with a 7-day weather forecast to generate a forward-looking, actionable risk level (Low, Medium, High).
 
 *   **🌲 Deforestation "Then vs. Now" Watch:**
-    *   **Zero-Input Intelligence:** Users no longer need to know *when* deforestation occurred. Our backend **intelligently compares** the last 3 months of satellite data against a historical baseline from the previous year.
+    *   **Zero-Input Intelligence:** Users no longer need to know *when* deforestation occurred. Our backend **intelligently compares** the last 3 months of satellite data against a historical baseline from the previous year to automatically detect recent deforestation.
     *   **Multi-Source Validation:** The algorithm confirms deforestation by detecting a drop in **both** SAR backscatter (indicating a change in surface roughness) and optical NDVI (indicating a loss of vegetation health), significantly reducing false positives.
 
 #### 🧠 Explainable AI (XAI) Engine
-We believe that data without explanation is just noise. Our XAI engine provides:
-*   **Clear Narratives:** Every analysis is accompanied by a structured report with a clear title, confidence level, and a plain-language summary.
-*   **Evidence-Based Reasoning:** The report breaks down *why* a conclusion was reached, citing specific evidence from SAR data, weather forecasts, and historical datasets.
+We don't just show data; we tell its story. Every analysis is accompanied by a clear, evidence-based report that explains *why* a conclusion was reached, detailing the SAR, optical, and meteorological drivers.
 
-#### 🎨 Immersive UI/UX Inspired by Windy.com
+#### 🎨 Immersive UI/UX inspired by Windy.com
 *   **Map as Interface:** A full-screen, dark-themed map is the heart of the application.
 *   **Dynamic Data Layers:** A professional, always-visible right-side panel allows users to instantly toggle between multiple global data layers:
     *   **Live Weather Radar** (from RainViewer)
@@ -52,8 +50,8 @@ We believe that data without explanation is just noise. Our XAI engine provides:
 
 Our system is designed with a modern, decoupled architecture for scalability and robustness.
 
-  
-*<-- [可選] 如果您有時間，可以畫一張簡單的架構圖並替換此鏈接*
+
+*(A simplified architecture diagram illustrating the data flow.)*
 
 *   **Frontend (`dashboard_windy_final.html`):**
     *   **Core:** Built with pure **HTML5, CSS3, and Vanilla JavaScript (ES6)** for maximum performance and zero dependencies.
@@ -85,18 +83,34 @@ Our system is designed with a modern, decoupled architecture for scalability and
     ```
 2.  **Backend Setup:**
     ```bash
-    cd backend
+    # Navigate to the backend directory from the project root
+    # (Assuming you are using the flat structure)
+    
+    # Create and activate a Python virtual environment (e.g., env)
     python -m venv env
+    
+    # On Windows
     .\env\Scripts\activate
+    
+    # On macOS/Linux
+    # source env/bin/activate
+    
+    # Install dependencies
     pip install -r requirements.txt
+    
+    # Authenticate with Google Earth Engine (a one-time setup)
     earthengine authenticate
+    
+    # Run the server
     uvicorn main_professional:app --reload
     ```
+    - The backend will be running at `http://127.0.0.1:8000`.
+
 3.  **Frontend Setup:**
     *   Get a **free API key** from [OpenWeatherMap](https://openweathermap.org/appid).
-    *   Open `frontend/index.html` in a text editor.
+    *   Open the project's main HTML file (e.g., `dashboard_windy_final.html`) in a text editor.
     *   Replace the placeholder `'YOUR_OPENWEATHERMAP_API_KEY'` with your actual key.
-    *   Open the `index.html` file in your web browser.
+    *   Open the same HTML file in your web browser.
 
 ---
 
@@ -112,4 +126,7 @@ While our current platform is a fully functional prototype, we have a clear visi
 
 ## 👤 Team Members
 
-*   Chiu Siew Seng/Miracle - Team Leader, Project Idea Owner and Floor Plan, AI Researcher/Developer, Frontend and Backend Developer, Lead Developer, and Data Scientist
+*   Chiu Siew Seng/Team Miracle - Team Leader, Project Idea and Floor Plan Owner, Frontend and Backend Developer, AI Developer and Researcher, and Lead Developer
+
+## Acknowledgements
+This project was made possible by the incredible open data provided by NASA, ESA (Copernicus), OpenWeatherMap, RainViewer, and OpenStreetMap.
