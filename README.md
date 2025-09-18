@@ -143,4 +143,4 @@ This project is structured into a `backend` and `frontend` directory.
 
 ## 👥 Our Team
 
-- **Chiu Siew Seng (Andrew) / Team Miracle** - Team Leader, Lead Developer, AI Developer, Frontend & Backend Developer
+- Chiu Siew Seng / Team Miracle - Team Leader, Lead Developer, AI Developer/Researcher, and Frontend & Backend Developer
