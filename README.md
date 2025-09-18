@@ -1,146 +1,115 @@
-# SAR-Weather Risk Explorer: A Dynamic Earth Observation Platform
+# Global SAR-Weather Risk & Change Explorer
 
 ![NASA Space Apps 2025](https://img.shields.io/badge/NASA_Space_Apps-Sarawak_2025-blue)
 ![Challenge](https://img.shields.io/badge/Challenge-Through_the_Radar_Looking_Glass-green)
+![Status](https://img.shields.io/badge/Status-Completed-success)
 
-An interactive, real-time platform designed to assess flood risk by intelligently fusing historical SAR (Synthetic Aperture Radar) data with live weather forecasts. This project is a submission for the **NASA Space Apps Sarawak 2025** event.
+**A Windy.com-inspired, dual-core analysis platform that fuses historical SAR data with real-time weather to provide on-demand, explainable insights into global flood risks and deforestation.**
 
-Inspired by the immersive experience of professional meteorological platforms like Windy.com, this tool goes a step further. It integrates a unique **Historical Vulnerability Index** calculated on-demand from Sentinel-1 SAR data, providing an unparalleled layer of explainable insight (XAI) into localized flood risk.
-
----
-
-## 📖 Table of Contents
-
-- [The Problem](#-the-problem)
-- [Our Solution](#-our-solution)
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Technology Stack](#-technology-stack)
-- [Live Demo & Screenshots](#-live-demo--screenshots)
-- [How to Run (For Developers)](#-how-to-run-for-developers)
-- [Our Team](#-our-team)
+This project is a submission for the **"Through the Radar Looking Glass: Revealing Earth Processes with SAR"** challenge. We didn't just build a tool; we created an immersive exploration experience. Our platform empowers any user—from a concerned citizen to a policy maker—to click anywhere on Earth and instantly receive a sophisticated, AI-driven analysis of environmental changes and risks, explained in clear, simple terms.
 
 ---
 
-## 📌 The Problem
+## 🚀 Live Demo & Presentation
 
-Traditional flood monitoring relies on historical data or optical satellites, which are often obscured by clouds during critical weather events. Furthermore, assessing future flood risk requires a complex understanding of both an area's inherent vulnerability and the upcoming weather threats. There is a need for a tool that can fuse these two dimensions into a single, understandable, and actionable insight, accessible to everyone from citizens to disaster response teams.
-
----
-
-## 💡 Our Solution
-
-The **SAR-Weather Risk Explorer** is a web-based platform that transforms complex geospatial and meteorological data into an intuitive, interactive experience. Our core innovation is a two-pronged analysis approach:
-
-1.  **Retrospective Vulnerability Analysis (The "Why"):** We use Google Earth Engine to perform on-the-fly analysis of 90 days of historical **Sentinel-1 SAR data**. This allows us to cut through clouds and rain to calculate a quantitative "Historical Vulnerability Index" for any location, showing how prone it is to flooding based on recent ground conditions.
-
-2.  **Predictive Threat Analysis (The "What's Next"):** We integrate real-time weather forecast APIs (OpenWeatherMap, Open-Meteo) to fetch the next 7 days of detailed weather predictions (precipitation, temperature, wind).
-
-An **Explainable AI (XAI) Engine** then fuses these two analyses to produce a clear, evidence-based risk assessment (Low, Medium, High) with a detailed explanation of the contributing factors.
+[![Project Demo GIF](https://github.com/user-attachments/assets/05b1853d-24ea-426b-8032-6a6c0e5a9172)](https://www.youtube.com/watch?v=dQw4w9WgXcQ) 
+*Click the image above to watch a full video demonstration of our platform in action.*
 
 ---
 
-## ✨ Key Features
+## ✨ Core Features
 
-- **🌍 Global On-Demand Analysis:** Click anywhere on the map or search for any location to get an instant, localized risk assessment.
-- **🛰️ SAR-Powered Vulnerability:** Automatically analyzes 90 days of historical Sentinel-1 SAR data to determine an area's recent vulnerability to flooding.
-- **🌦️ Real-time Weather Integration:** Fuses SAR analysis with a 7-day weather forecast from multiple sources.
-- **🧠 Explainable AI (XAI) Engine:** A rule-based engine provides a clear, evidence-based summary explaining *why* the risk is assessed as Low, Medium, or High.
-- **🎨 Immersive UI/UX:** A full-screen, dark-themed map interface with floating panels, inspired by professional meteorological platforms.
-- **📡 Multi-Layer Data Exploration:** Dynamically toggle between live weather radar (from RainViewer), forecast layers (wind, precipitation, temp), and our unique historical SAR flood analysis.
-- **👆 Interactive & Intuitive:** Designed for both experts and the general public, with a "point-and-click" interface that requires no prior GIS knowledge.
+Our platform is built on three foundational pillars: **On-Demand Analysis**, **Intelligent Fusion**, and **Immersive Experience**.
 
----
+#### 🛰️ Dual-Core Analysis Engine
+Seamlessly switch between two powerful, on-demand analysis modes with a single click:
 
-## 🏗️ System Architecture
+*   **🌊 Flood Risk Assessment:**
+    *   **Retrospective Analysis:** Utilizes 90 days of historical Sentinel-1 SAR data to calculate a quantitative **"Historical Vulnerability Index"** for the selected area.
+    *   **Predictive Insight:** Fuses this vulnerability index with a 7-day weather forecast to generate a forward-looking, actionable risk level (Low, Medium, High).
 
-Our platform is built on a modern, decoupled architecture:
+*   **🌲 Deforestation "Then vs. Now" Watch:**
+    *   **Zero-Input Intelligence:** Users no longer need to know *when* deforestation occurred. Our backend **intelligently compares** the last 3 months of satellite data against a historical baseline from the previous year.
+    *   **Multi-Source Validation:** The algorithm confirms deforestation by detecting a drop in **both** SAR backscatter (indicating a change in surface roughness) and optical NDVI (indicating a loss of vegetation health), significantly reducing false positives.
 
- <!-- 建议您创建一个简单的流程图并替换此链接 -->
+#### 🧠 Explainable AI (XAI) Engine
+We believe that data without explanation is just noise. Our XAI engine provides:
+*   **Clear Narratives:** Every analysis is accompanied by a structured report with a clear title, confidence level, and a plain-language summary.
+*   **Evidence-Based Reasoning:** The report breaks down *why* a conclusion was reached, citing specific evidence from SAR data, weather forecasts, and historical datasets.
 
-1.  **Frontend (`index.html`):** A lightweight Vanilla JS application using Leaflet.js for mapping. It handles user interactions (clicks, searches) and visualizes data from both our backend and external APIs.
-2.  **Backend (`main_professional.py`):** A high-performance FastAPI server that acts as the central brain. It receives requests, dynamically creates Areas of Interest (AOI), and orchestrates the analysis.
-3.  **Geospatial Engine (Google Earth Engine):** The heavy-lifting is delegated to GEE's powerful cloud infrastructure for all SAR data processing and analysis.
-4.  **External Data APIs:** We enrich our analysis with real-time data from OpenWeatherMap (forecasts, temperatures), RainViewer (live radar), and Nominatim (geocoding).
-
----
-
-## 🛠️ Technology Stack
-
-- **Backend:**
-  - **Framework:** Python, FastAPI
-  - **Geospatial Analysis:** Google Earth Engine (GEE) Python API
-- **Frontend:**
-  - **Core:** HTML5, CSS3, Vanilla JavaScript (ES6)
-  - **Mapping Library:** Leaflet.js
-- **Data Sources:**
-  - **SAR:** NASA/ESA Sentinel-1
-  - **Weather Forecast & Live Data:** OpenWeatherMap, Open-Meteo, RainViewer
-  - **Geocoding:** Nominatim (OpenStreetMap)
+#### 🎨 Immersive UI/UX Inspired by Windy.com
+*   **Map as Interface:** A full-screen, dark-themed map is the heart of the application.
+*   **Dynamic Data Layers:** A professional, always-visible right-side panel allows users to instantly toggle between multiple global data layers:
+    *   **Live Weather Radar** (from RainViewer)
+    *   **Forecast Layers** (Wind, Precipitation, Temp from OWM)
+    *   **Our Unique SAR Analysis Results** (Flood or Deforestation)
+*   **Interactive Controls:** Floating panels, an interactive forecast timeline, and seamless transitions create a fluid and engaging user experience.
+*   **Live Global Data:** The map is populated with live temperature labels for major cities, making the world feel alive and data-rich from the moment you arrive.
 
 ---
 
-## 🎬 Live Demo & Screenshots
+## 🛠️ Technology Architecture
 
-*(在这里嵌入您的演示视频链接和几张最精彩的截图)*
+Our system is designed with a modern, decoupled architecture for scalability and robustness.
 
-**[Link to our Demo Video on YouTube]**
+  
+*<-- [可選] 如果您有時間，可以畫一張簡單的架構圖並替換此鏈接*
 
-| Feature | Screenshot |
-| :--- | :--- |
-| **Initial Exploration View** |  |
-| **On-Demand Analysis Result** |  |
-| **Live Radar Layer** |  |
+*   **Frontend (`dashboard_windy_final.html`):**
+    *   **Core:** Built with pure **HTML5, CSS3, and Vanilla JavaScript (ES6)** for maximum performance and zero dependencies.
+    *   **Mapping:** **Leaflet.js** for a lightweight, powerful interactive map.
+    *   **Real-time Layers:** Dynamically integrates tile layers from **OpenWeatherMap** (forecasts) and **RainViewer** (live radar).
+
+*   **Backend (`main_professional.py`):**
+    *   **Framework:** A high-performance asynchronous API built with **Python 3.10** and **FastAPI**.
+    *   **Geospatial Engine:** All heavy-duty satellite data processing is delegated to the **Google Earth Engine (GEE) Python API**, leveraging Google's planetary-scale computational power.
+    *   **Asynchronous Tasks:** Analysis requests are handled as background tasks to ensure the API remains responsive.
+    *   **API Endpoints:**
+        *   `POST /api/v9/analyze`: The single, intelligent endpoint that receives a location and analysis type, and orchestrates the entire backend workflow.
+        *   `GET /api/v9/tasks/{task_id}`: Allows the frontend to poll for the status and results of an analysis task.
 
 ---
 
-## 🚀 How to Run (For Developers)
+## 🚀 How to Run Locally
 
-This project is structured into a `backend` and `frontend` directory.
+### Prerequisites
+*   Git
+*   Python 3.10+
+*   A Google Earth Engine enabled account
 
-### Backend Setup
-
-1.  Navigate to the `backend` directory:
+### Setup & Execution
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/[Your_Username]/[Your_Repo_Name].git
+    cd [Your_Repo_Name]
+    ```
+2.  **Backend Setup:**
     ```bash
     cd backend
-    ```
-2.  Create and activate a Python virtual environment:
-    ```bash
-    # On Windows
-    python -m venv venv
-    .\venv\Scripts\activate
-    
-    # On macOS/Linux
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-3.  Install the required dependencies:
-    ```bash
+    python -m venv env
+    .\env\Scripts\activate
     pip install -r requirements.txt
-    ```
-4.  **Crucial Step:** Authenticate with Google Earth Engine. This is a one-time setup that links your Google account.
-    ```bash
     earthengine authenticate
-    ```
-    Follow the on-screen instructions in your browser. You will also need to enable the "Earth Engine API" in your Google Cloud project as prompted.
-
-5.  Run the FastAPI server:
-    ```bash
     uvicorn main_professional:app --reload
     ```
-    - The backend will now be running at `http://127.0.0.1:8000`.
-
-### Frontend Setup
-
-1.  Navigate to the `frontend` directory.
-2.  **Crucial Step:** You need a free API key from [OpenWeatherMap](https://openweathermap.org/appid) to enable the live weather layers and temperature data.
-3.  Open the `index.html` file in a text editor.
-4.  Find the line `const OWM_API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY';`
-5.  Replace `'YOUR_OPENWEATHERMAP_API_KEY'` with your actual key.
-6.  Save the file and open `index.html` in your favorite web browser. The application should now be fully functional.
+3.  **Frontend Setup:**
+    *   Get a **free API key** from [OpenWeatherMap](https://openweathermap.org/appid).
+    *   Open `frontend/index.html` in a text editor.
+    *   Replace the placeholder `'YOUR_OPENWEATHERMAP_API_KEY'` with your actual key.
+    *   Open the `index.html` file in your web browser.
 
 ---
 
-## 👥 Our Team
+## 🌟 Future Vision (Level 3)
 
-- Chiu Siew Seng / Team Miracle - Team Leader, Lead Developer, AI Developer/Researcher, and Frontend & Backend Developer
+While our current platform is a fully functional prototype, we have a clear vision for its evolution into a true AI-powered predictive engine:
+
+1.  **Phase 1 - Automated Data Curation:** Develop a pipeline to systematically analyze decades of historical SAR and weather data, creating a massive, labeled dataset of weather events and their corresponding flood/deforestation outcomes.
+2.  **Phase 2 - Predictive Model Training:** Train an **Adaptive Neuro-Fuzzy Inference System (ANFIS)** on this dataset. This model will learn the complex, non-linear relationships and be able to *predict* the probability and scale of a flood based purely on weather *forecast* data.
+3.  **Phase 3 - AI Explainability with SHAP:** Integrate the **SHAP (SHapley Additive exPlanations)** library to make our AI model's predictions transparent. This will allow us to precisely quantify which forecast parameter (e.g., precipitation sum, wind speed) contributed most to a specific risk assessment, providing unparalleled, trustworthy insights for decision-makers.
+
+---
+
+## 👤 Team Members
+
+*   Chiu Siew Seng/Miracle - Team Leader, Project Idea Owner and Floor Plan, AI Researcher/Developer, Frontend and Backend Developer, Lead Developer, and Data Scientist
