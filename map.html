@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Global SAR-Weather Risk Explorer</title>
+    <title>Global SAR-Weather Risk & Change Explorer</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
-        /* CSS 与 V7.3 版本完全相同，但为新的雷达时间轴添加了样式 */
         html,body,#map{height:100%;width:100%;margin:0;padding:0;background:#1a1a1a;overflow:hidden}
         .leaflet-container{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#1a1a1a}
         .floating-panel{position:absolute;z-index:1000;background:rgba(30,30,30,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.3);transition:all .4s cubic-bezier(.25,.8,.25,1);color:#f0f0f0}
         #control-panel{top:20px;left:20px;width:350px;padding:15px 20px}
-        #result-panel{top:170px;left:20px;width:350px;max-height:calc(100vh - 190px);padding:15px 20px;overflow-y:auto;transform:translateX(-120%)}
+        #result-panel{top:220px;left:20px;width:350px;max-height:calc(100vh - 240px);padding:15px 20px;overflow-y:auto;transform:translateX(-120%)}
         #result-panel.visible{transform:translateX(0)}
         #layer-panel{top:20px;right:20px;width:250px;padding:10px}
         .layer-list{list-style:none;padding:0;margin:0}
@@ -27,44 +26,30 @@
         .layer-item i{margin-right:15px;width:20px;text-align:center}
         #forecast-panel{bottom:-200px;left:50%;transform:translateX(-50%);width:80%;max-width:1200px;padding:0;border-radius:12px 12px 0 0;overflow:hidden}
         #forecast-panel.visible{bottom:0}
-        #action-tooltip{position:absolute;top:135px;left:20px;background-color:#0d6efd;color:#fff;padding:10px 15px;border-radius:6px;font-size:14px;z-index:1001;opacity:0;transform:translateY(-20px);transition:opacity .3s ease,transform .3s ease;pointer-events:none}
+        #action-tooltip{position:absolute;top:185px;left:20px;background-color:#0d6efd;color:#fff;padding:10px 15px;border-radius:6px;font-size:14px;z-index:1001;opacity:0;transform:translateY(-20px);transition:opacity .3s ease,transform .3s ease;pointer-events:none}
         .temperature-label{background:rgba(0,0,0,.6);border-radius:15px;padding:3px 10px;color:#fff;font-weight:700;font-size:14px;text-align:center;white-space:nowrap;border:1px solid rgba(255,255,255,.2);box-shadow:0 2px 5px rgba(0,0,0,.3)}
         .temperature-label .city-name{font-size:12px;font-weight:400;display:block;opacity:.8}
-        .daily-forecast-container{display:flex;background:rgba(40,40,40,.9)}.day-forecast{flex:1;padding:15px 10px;text-align:center;border-right:1px solid #444;cursor:pointer;transition:background-color .2s ease}.day-forecast:last-child{border-right:none}.day-forecast.active,.day-forecast:hover{background-color:#0d6efd}.day-forecast .day-name{font-weight:700;font-size:14px}.day-forecast .weather-icon{font-size:24px;margin:10px 0}.day-forecast .temp-range{font-size:14px}.hourly-forecast-container{display:none;background:rgba(20,20,20,.9);padding:15px;white-space:nowrap;overflow-x:auto}.hourly-forecast-container.visible{display:block}.hour-forecast{display:inline-block;width:80px;padding:10px;text-align:center}.hour-forecast .hour-time{font-weight:700}.hour-forecast .hour-temp{font-size:18px;margin:5px 0}#control-panel h4{margin:0 0 15px 0;color:#fff;font-size:18px}.search-container{display:flex;margin-bottom:10px}#search-input{flex-grow:1;border:1px solid #444;padding:10px;border-radius:6px 0 0 6px;background:#333;color:#fff;font-size:14px;outline:none}#search-input::placeholder{color:#888}#search-button{border:1px solid #0d6efd;background:#0d6efd;color:#fff;padding:8px 15px;border-radius:0 6px 6px 0;cursor:pointer;font-size:16px}.instructions{font-size:13px;color:#aaa;text-align:center}.location-title{font-size:18px;font-weight:700;margin-bottom:10px;color:#fff}.risk-summary{padding:15px;border-radius:8px;margin-bottom:20px;color:#fff;text-align:center}.risk-summary h2{margin:0 0 5px 0;font-size:24px;font-weight:600}.risk-summary p{margin:0;font-size:16px;opacity:.9}.risk-low{background-color:#28a745}.risk-medium{background-color:#ffc107;color:#212529}.risk-high{background-color:#dc3545}.evidence-details h4{margin-top:20px;margin-bottom:8px;font-size:16px;border-bottom:2px solid #0d6efd;padding-bottom:5px;color:#0d6efd}.evidence-details p{margin:5px 0 15px 0;line-height:1.6;font-size:14px;color:#ccc}#status-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1001;background:rgba(0,0,0,.8);color:#fff;padding:20px 30px;border-radius:10px;font-size:20px;display:none;align-items:center}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.loader{border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:24px;height:24px;animation:spin 1.5s linear infinite;display:inline-block;vertical-align:middle;margin-right:15px}
-        
-        /* [New] Radar Timeline Control */
-        #radar-timeline-panel {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: rgba(30, 30, 30, 0.85);
-            padding: 10px 15px;
-            border-radius: 8px;
-            display: none; /* Initially hidden */
-            align-items: center;
-        }
-        #radar-play-button {
-            background: none; border: none; color: white; font-size: 20px; cursor: pointer; margin-right: 10px;
-        }
-        #radar-timestamp {
-            font-size: 14px;
-            font-weight: bold;
-        }
-
+        .analysis-switcher{display:flex;margin-bottom:15px;background:#2a2a2e;border-radius:6px;padding:5px}.switch-button{flex:1;padding:8px;border:none;background:transparent;color:#aaa;cursor:pointer;border-radius:4px;font-weight:700;font-size:14px;transition:all .2s ease}.switch-button.active{background:#0d6efd;color:#fff}
+        .daily-forecast-container{display:flex;background:rgba(40,40,40,.9)}.day-forecast{flex:1;padding:15px 10px;text-align:center;border-right:1px solid #444;cursor:pointer;transition:background-color .2s ease}.day-forecast:last-child{border-right:none}.day-forecast.active,.day-forecast:hover{background-color:#0d6efd}.day-forecast .day-name{font-weight:700;font-size:14px}.day-forecast .weather-icon{font-size:24px;margin:10px 0}.day-forecast .temp-range{font-size:14px}.hourly-forecast-container{display:none;background:rgba(20,20,20,.9);padding:15px;white-space:nowrap;overflow-x:auto}.hourly-forecast-container.visible{display:block}.hour-forecast{display:inline-block;width:80px;padding:10px;text-align:center}.hour-forecast .hour-time{font-weight:700}.hour-forecast .hour-temp{font-size:18px;margin:5px 0}
+        #control-panel h4{margin:0 0 15px 0;color:#fff;font-size:18px}.search-container{display:flex;margin-bottom:10px}#search-input{flex-grow:1;border:1px solid #444;padding:10px;border-radius:6px 0 0 6px;background:#333;color:#fff;font-size:14px;outline:none}#search-input::placeholder{color:#888}#search-button{border:1px solid #0d6efd;background:#0d6efd;color:#fff;padding:8px 15px;border-radius:0 6px 6px 0;cursor:pointer;font-size:16px}.instructions{font-size:13px;color:#aaa;text-align:center}.location-title{font-size:18px;font-weight:700;margin-bottom:10px;color:#fff}.risk-summary{padding:15px;border-radius:8px;margin-bottom:20px;color:#fff;text-align:center}.risk-summary h2{margin:0 0 5px 0;font-size:24px;font-weight:600}.risk-summary p{margin:0;font-size:16px;opacity:.9}.risk-low{background-color:#28a745}.risk-medium{background-color:#ffc107;color:#212529}.risk-high{background-color:#dc3545}.evidence-details h4{margin-top:20px;margin-bottom:8px;font-size:16px;border-bottom:2px solid #0d6efd;padding-bottom:5px;color:#0d6efd}.evidence-details p{margin:5px 0 15px 0;line-height:1.6;font-size:14px;color:#ccc}#status-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1001;background:rgba(0,0,0,.8);color:#fff;padding:20px 30px;border-radius:10px;font-size:20px;display:none;align-items:center}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.loader{border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:24px;height:24px;animation:spin 1.5s linear infinite;display:inline-block;vertical-align:middle;margin-right:15px}
+        #radar-timeline-panel{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(30,30,30,.85);padding:10px 15px;border-radius:8px;display:none;align-items:center;width:50%;max-width:600px}#radar-play-button{background:0 0;border:none;color:#fff;font-size:20px;cursor:pointer;margin-right:10px}#radar-timestamp{font-size:14px;font-weight:700;min-width:80px;text-align:center}
     </style>
 </head>
 <body>
 
 <div id="map"></div>
 <div id="control-panel" class="floating-panel">
-    <h4><i class="fa-solid fa-magnifying-glass" style="margin-right: 8px;"></i>Risk Analysis</h4>
+    <h4><i class="fa-solid fa-satellite"></i> Analysis Mode</h4>
+    <div class="analysis-switcher">
+        <button id="switch-flood" class="switch-button active">Flood Risk</button>
+        <button id="switch-deforestation" class="switch-button">Deforestation</button>
+    </div>
     <div class="search-container">
         <input type="text" id="search-input" placeholder="e.g., Sibu, Sarawak">
         <button id="search-button" title="Search Location"><i class="fa-solid fa-search"></i></button>
     </div>
     <div id="action-tooltip"></div>
-    <p class="instructions" id="instructions">Click on the map to unlock SAR analysis.</p>
+    <p class="instructions" id="instructions">Click map or search to analyze.</p>
 </div>
 <div id="result-panel" class="floating-panel"></div>
 <div id="forecast-panel" class="floating-panel">
@@ -84,36 +69,58 @@
 <script>
     // --- Configuration ---
     const API_BASE_URL = 'http://127.0.0.1:8000';
-    const OWM_API_KEY = '5f66e14d6562958e2f9fb986b4fc8bdf'; 
+    const OWM_API_KEY = '5f66e14d6562958e2f9fb986b4fc8bdf';
 
-    // --- Map Initialization ---
-    const map = L.map('map', { zoomControl: false }).setView([4.21, 101.97], 6);
-    L.control.zoom({ position: 'topright' }).addTo(map);
-    const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-    }).addTo(map);
-
-    // --- Global State & UI Elements ---
-    let activeLayers = {}, clickMarker = null, fullForecastData = null, temperatureLayerGroup = L.layerGroup().addTo(map);
+    // --- Global State ---
+    let map, baseLayer, activeLayers = {}, clickMarker = null, fullForecastData = null, temperatureLayerGroup = null;
+    let currentAnalysisMode = 'flood';
     let radarLayers = [], radarAnimation = null;
-    const statusOverlay = document.getElementById('status-overlay');
-    const resultPanel = document.getElementById('result-panel');
-    const forecastPanel = document.getElementById('forecast-panel');
-    const layerPanel = document.getElementById('layer-panel');
-    const radarTimelinePanel = document.getElementById('radar-timeline-panel');
-    
+    let statusOverlay, resultPanel, forecastPanel, layerPanel, searchInput, searchButton, radarTimelinePanel;
+
+    // --- Main Initialization ---
+    function initializeApp() {
+        map = L.map('map', { zoomControl: false }).setView([4.21, 101.97], 6);
+        L.control.zoom({ position: 'topright' }).addTo(map);
+        baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        }).addTo(map);
+        temperatureLayerGroup = L.layerGroup().addTo(map);
+
+        statusOverlay = document.getElementById('status-overlay');
+        resultPanel = document.getElementById('result-panel');
+        forecastPanel = document.getElementById('forecast-panel');
+        layerPanel = document.getElementById('layer-panel');
+        searchInput = document.getElementById('search-input');
+        searchButton = document.getElementById('search-button');
+        radarTimelinePanel = document.getElementById('radar-timeline-panel');
+        const switchFloodBtn = document.getElementById('switch-flood');
+        const switchDeforestationBtn = document.getElementById('switch-deforestation');
+
+        map.on('moveend', updateLiveTemperatures);
+        map.on('zoomend', updateLiveTemperatures);
+        map.on("click", handleMapClick);
+        searchButton.addEventListener("click", searchLocation);
+        searchInput.addEventListener("keydown", e => { if (e.key === "Enter") searchLocation(); });
+        document.addEventListener("keydown", handleEscKey);
+        switchFloodBtn.addEventListener('click', () => switchMode('flood'));
+        switchDeforestationBtn.addEventListener('click', () => switchMode('deforestation'));
+
+        initializeLayerPanel();
+        updateLiveTemperatures();
+    }
+
     // --- UI/UX Functions ---
-    // [V7.4 Final] The `initializeUI` function now uses RainViewer for the radar layer.
-    function initializeUI() {
+    function initializeLayerPanel() {
         const layerList = document.getElementById("layer-list");
         layerList.innerHTML = "";
         const availableLayers = [];
-
+        
+        availableLayers.push({ id: "radar", name: "Live Weather Radar", icon: "fa-solid fa-satellite-dish", inactive: false });
+        
         if (OWM_API_KEY && OWM_API_KEY !== 'YOUR_OPENWEATHERMAP_API_KEY') {
-            activeLayers.precip = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OWM_API_KEY}`, { opacity: 0.65 });
-            activeLayers.temp = L.tileLayer(`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OWM_API_KEY}`, { opacity: 0.65 });
             activeLayers.wind = L.tileLayer(`https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OWM_API_KEY}`, { opacity: 0.7 });
-
+            activeLayers.precip = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OWM_API_KEY}`,{opacity:.65});
+            activeLayers.temp = L.tileLayer(`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OWM_API_KEY}`,{opacity:.65});
             availableLayers.push(
                 { id: "wind", name: "Forecast: Wind", icon: "fa-solid fa-wind", inactive: false },
                 { id: "precip", name: "Forecast: Precipitation", icon: "fa-solid fa-cloud-showers-heavy", inactive: false },
@@ -121,12 +128,9 @@
             );
         }
         
-        // RainViewer radar is always available and does not need an API key
-        availableLayers.unshift({ id: "radar", name: "Live Weather Radar", icon: "fa-solid fa-satellite-dish", inactive: false });
-
-        availableLayers.push({ id: "sar", name: "Historical Flood (SAR)", icon: "fa-solid fa-water", inactive: true });
-        availableLayers.push({ id: "aoi", name: "Area of Interest", icon: "fa-solid fa-draw-polygon", inactive: true });
-
+        availableLayers.push({id:"sar",name:"Historical Analysis",icon:"fa-solid fa-satellite-dish",inactive:true});
+        availableLayers.push({id:"aoi",name:"Area of Interest",icon:"fa-solid fa-draw-polygon",inactive:true});
+        
         availableLayers.forEach(layerInfo => {
             const li = document.createElement("li");
             li.className = `layer-item ${layerInfo.inactive ? "inactive" : ""}`;
@@ -137,18 +141,108 @@
         });
         
         layerPanel.classList.add("visible");
-        toggleLayer('radar'); // Activate radar by default
+        toggleLayer('radar');
     }
 
-    // [V7.4 Final] The `toggleLayer` function now handles the RainViewer animation.
+    function displayResults(data) {
+        const { result, request_data } = data;
+        const locationName = request_data.locationName || 'Selected Area';
+
+        if (result.analysis_type === 'flood') {
+            const { risk_assessment, weather_forecast } = result;
+            resultPanel.innerHTML = `
+                <div class="location-title">${locationName}</div>
+                <div class="risk-summary risk-${risk_assessment.risk_level.toLowerCase()}">
+                    <h2>${risk_assessment.risk_level} Risk</h2><p>Confidence: ${risk_assessment.confidence}</p>
+                </div>
+                <div class="evidence-details">
+                    <p>${risk_assessment.summary.replace(/\*\*/g,"<strong>")}</p>
+                    <h4><i class="fa-solid fa-satellite-dish"></i> Historical Vulnerability (SAR)</h4>
+                    <p>${risk_assessment.evidence.historical_vulnerability}</p>
+                    <h4><i class="fa-solid fa-cloud-sun-rain"></i> Future Threat (Weather)</h4>
+                    <p>${risk_assessment.evidence.future_threat}</p>
+                </div>
+            `;
+            if (weather_forecast && weather_forecast.success) {
+                forecastPanel.classList.add('visible');
+                populateForecastPanel(weather_forecast);
+            }
+        } else if (result.analysis_type === 'deforestation') {
+            const { analysis_report } = result;
+            resultPanel.innerHTML = `
+                <div class="location-title">${locationName}</div>
+                <div class="risk-summary" style="background-color: #d9534f;">
+                    <h2>${analysis_report.area_sq_km} sq km</h2>
+                    <p>Potential Deforestation</p>
+                </div>
+                <div class="evidence-details">
+                    <p>${analysis_report.story.summary}</p>
+                    <h4><i class="fa-solid fa-ruler-combined"></i> Analysis Details</h4>
+                    <p>${analysis_report.story.evidence[0].finding}</p>
+                    <h4><i class="fa-solid fa-calendar-days"></i> Data Period</h4>
+                    <p>${analysis_report.story.evidence[1].finding}</p>
+                </div>
+            `;
+            forecastPanel.classList.remove('visible');
+        }
+        
+        resultPanel.classList.add('visible');
+        activateAnalysisLayers(result);
+    }
+    
+    // [V9.2 Final Fix] This function is now correctly defined and included.
+    function activateAnalysisLayers(result) {
+        const sarItem = document.querySelector('.layer-item[data-layer-id="sar"]');
+        const aoiItem = document.querySelector('.layer-item[data-layer-id="aoi"]');
+
+        if (activeLayers.sar && map.hasLayer(activeLayers.sar)) map.removeLayer(activeLayers.sar);
+        if (activeLayers.aoi && map.hasLayer(activeLayers.aoi)) map.removeLayer(activeLayers.aoi);
+
+        if (result.analysis_type === 'flood') {
+            activeLayers.sar = L.tileLayer(result.historical_context.tile_url, { opacity: 0.75 });
+            if(sarItem) sarItem.innerHTML = `<i class="fa-solid fa-water"></i> Historical Flood`;
+        } else if (result.analysis_type === 'deforestation') {
+            activeLayers.sar = L.tileLayer(result.deforestation_context.tile_url, { opacity: 0.75 });
+            if(sarItem) sarItem.innerHTML = `<i class="fa-solid fa-tree-city"></i> Deforestation`;
+        }
+        
+        activeLayers.aoi = L.geoJSON(result.analyzed_geojson, { style: {color: "#ff7800", weight: 3, fillOpacity: 0} });
+        
+        if (sarItem) sarItem.classList.remove("inactive");
+        if (aoiItem) aoiItem.classList.remove("inactive");
+        
+        map.addLayer(activeLayers.aoi);
+        if (aoiItem) aoiItem.classList.add("active");
+        
+        toggleLayer("sar");
+        map.fitBounds(activeLayers.aoi.getBounds(), { padding: [50, 50] });
+    }
+
+    function switchMode(mode) {
+        currentAnalysisMode = mode;
+        const instructions = document.getElementById('instructions');
+        if (mode === 'flood') {
+            document.getElementById('switch-flood').classList.add('active');
+            document.getElementById('switch-deforestation').classList.remove('active');
+            instructions.textContent = 'Click map or search to analyze Flood Risk.';
+        } else {
+            document.getElementById('switch-flood').classList.remove('active');
+            document.getElementById('switch-deforestation').classList.add('active');
+            instructions.textContent = 'Click map or search for recent Deforestation.';
+        }
+        resetDashboard();
+    }
+    
+    function showActionTooltip(e){const t=document.getElementById("action-tooltip");if(!t)return;t.textContent=e,t.style.opacity="1",t.style.transform="translateY(0)",setTimeout(()=>{t.style.opacity="0",t.style.transform="translateY(-20px)"},3e3)}
+    
     function toggleLayer(layerId) {
         const item = document.querySelector(`.layer-item[data-layer-id="${layerId}"]`);
-        if (item.classList.contains('inactive')) {
+        if (item && item.classList.contains('inactive')) {
             showActionTooltip("Click on the map first to activate this layer.");
             return;
         }
 
-        stopRadarAnimation(); // Stop any running animation
+        stopRadarAnimation();
         radarTimelinePanel.style.display = 'none';
 
         document.querySelectorAll('#layer-list .layer-item').forEach(li => {
@@ -161,120 +255,42 @@
             }
         });
         
-        item.classList.add('active');
+        if (item) item.classList.add('active');
+
         if (layerId === 'radar') {
             startRadarAnimation();
         } else if (activeLayers[layerId] && !map.hasLayer(activeLayers[layerId])) {
             map.addLayer(activeLayers[layerId]);
         }
         
+        const aoiItem = document.querySelector('.layer-item[data-layer-id="aoi"]');
         if (layerId === 'aoi') {
-            item.classList.toggle('active');
-            if (map.hasLayer(activeLayers.aoi)) map.removeLayer(activeLayers.aoi);
-            else map.addLayer(activeLayers.aoi);
+            if (aoiItem) aoiItem.classList.toggle('active');
         }
-    }
-
-    // [V7.4 New] RainViewer Animation Logic
-    async function startRadarAnimation() {
-        try {
-            const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-            const data = await response.json();
-            const radarData = data.radar;
-            
-            radarLayers = radarData.nowcast.map(frame => 
-                L.tileLayer(data.host + frame.path + '/256/{z}/{x}/{y}/2/1_1.png', {
-                    opacity: 0,
-                    zIndex: frame.time
-                })
-            );
-
-            let currentIndex = 0;
-            const playButton = document.getElementById('radar-play-button');
-            const slider = document.getElementById('radar-slider');
-            const timestampDiv = document.getElementById('radar-timestamp');
-
-            slider.max = radarLayers.length - 1;
-            
-            function showFrame(index) {
-                radarLayers.forEach((layer, i) => {
-                    if (i === index) {
-                        if (!map.hasLayer(layer)) map.addLayer(layer);
-                        layer.setOpacity(1);
-                    } else {
-                        layer.setOpacity(0);
-                    }
-                });
-                const frameTime = new Date(radarData.nowcast[index].time * 1000);
-                timestampDiv.textContent = frameTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                slider.value = index;
-            }
-
-            function play() {
-                playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
-                radarAnimation = setInterval(() => {
-                    currentIndex = (currentIndex + 1) % radarLayers.length;
-                    showFrame(currentIndex);
-                }, 500);
-            }
-            
-            stopRadarAnimation = function() { // Assign to global scope
-                clearInterval(radarAnimation);
-                playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
-                radarLayers.forEach(layer => {
-                    if (map.hasLayer(layer)) map.removeLayer(layer);
-                });
-                radarLayers = [];
-            };
-
-            playButton.onclick = () => {
-                if (radarAnimation) {
-                    clearInterval(radarAnimation);
-                    radarAnimation = null;
-                    playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
-                } else {
-                    play();
-                }
-            };
-            
-            slider.oninput = (e) => {
-                clearInterval(radarAnimation);
-                radarAnimation = null;
-                playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
-                currentIndex = parseInt(e.target.value, 10);
-                showFrame(currentIndex);
-            };
-
-            radarTimelinePanel.style.display = 'flex';
-            showFrame(currentIndex);
-            play();
-
-        } catch (error) {
-            console.error("Failed to load RainViewer data:", error);
+        
+        if (aoiItem && aoiItem.classList.contains('active') && activeLayers.aoi && !map.hasLayer(activeLayers.aoi)) {
+            map.addLayer(activeLayers.aoi);
+        } else if (aoiItem && !aoiItem.classList.contains('active') && activeLayers.aoi && map.hasLayer(activeLayers.aoi)) {
+            map.removeLayer(activeLayers.aoi);
         }
     }
     
-    function stopRadarAnimation() { /* Will be defined in startRadarAnimation */ }
+    async function startRadarAnimation(){try{const e=await fetch("https://api.rainviewer.com/public/weather-maps.json");if(!e.ok)throw new Error("RainViewer API failed");const t=await e.json(),a=t.radar;stopRadarAnimation(),radarLayers=a.nowcast.map(e=>L.tileLayer(t.host+e.path+"/512/{z}/{x}/{y}/2/1_1.png",{opacity:0,zIndex:e.time}));let l=radarLayers.length-1;const s=document.getElementById("radar-play-button"),o=document.getElementById("radar-slider"),r=document.getElementById("radar-timestamp");function n(e){radarLayers.forEach((t,a)=>{a===e?(map.hasLayer(t)||map.addLayer(t),t.setOpacity(.8)):map.hasLayer(t)&&map.removeLayer(t)});const t=new Date(1e3*a.nowcast[e].time);r.textContent=t.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),o.value=e}function i(){s.innerHTML='<i class="fa-solid fa-pause"></i>',radarAnimation=setInterval(()=>{l=(l+1)%radarLayers.length,n(l)},500)}stopRadarAnimation=function(){clearInterval(radarAnimation),radarAnimation=null,s&&(s.innerHTML='<i class="fa-solid fa-play"></i>'),radarLayers.forEach(e=>{map.hasLayer(e)&&map.removeLayer(e)}),radarLayers=[]},s.onclick=()=>{radarAnimation?(clearInterval(radarAnimation),radarAnimation=null,s.innerHTML='<i class="fa-solid fa-play"></i>'):i()},o.oninput=e=>{clearInterval(radarAnimation),radarAnimation=null,s.innerHTML='<i class="fa-solid fa-play"></i>',l=parseInt(e.target.value,10),n(l)},radarTimelinePanel.style.display="flex",o.max=radarLayers.length-1,n(l)}catch(e){console.error("Failed to load RainViewer data:",e),showActionTooltip("Could not load live radar data.")}}
+    function stopRadarAnimation(){}
     
-    // --- All other JS functions are included below without changes ---
-    // They are minified for brevity but are fully functional.
-    function showActionTooltip(e){const t=document.getElementById("action-tooltip");t.textContent=e,t.style.opacity="1",t.style.transform="translateY(0)",setTimeout(()=>{t.style.opacity="0",t.style.transform="translateY(-20px)"},3e3)}
     let debounceTimer;async function updateLiveTemperatures(){if(!OWM_API_KEY||"YOUR_OPENWEATHERMAP_API_KEY"===OWM_API_KEY)return;clearTimeout(debounceTimer),debounceTimer=setTimeout(async()=>{const e=map.getCenter(),t=e.lat,a=e.lng;try{const e=await fetch(`https://api.openweathermap.org/data/2.5/find?lat=${t}&lon=${a}&cnt=50&appid=${OWM_API_KEY}&units=metric`);if(!e.ok)return;const l=await e.json();temperatureLayerGroup.clearLayers(),l.list&&l.list.forEach(e=>{const t=L.divIcon({className:"temperature-label",html:`<div>${Math.round(e.main.temp)}°</div><span class="city-name">${e.name}</span>`});L.marker([e.coord.lat,e.coord.lon],{icon:t}).addTo(temperatureLayerGroup)})}catch(e){console.error("Failed to fetch live temperatures:",e)}},500)}
-    map.on("moveend",updateLiveTemperatures),map.on("zoomend",updateLiveTemperatures),document.addEventListener("DOMContentLoaded",()=>{initializeUI(),updateLiveTemperatures()});
-    function resetDashboard(){resultPanel.classList.remove("visible"),forecastPanel.classList.remove("visible"),clickMarker&&map.removeLayer(clickMarker),activeLayers.sar&&map.removeLayer(activeLayers.sar),activeLayers.aoi&&map.removeLayer(activeLayers.aoi),clickMarker=null,document.getElementById("search-input").value="";const e=document.querySelector('.layer-item[data-layer-id="sar"]'),t=document.querySelector('.layer-item[data-layer-id="aoi"]');e&&e.classList.add("inactive"),t&&t.classList.add("inactive")}
-    document.addEventListener("keydown",function(e){"Escape"===e.key&&(statusOverlay.style.display!=="none"||resetDashboard())});
-    function showStatus(e){statusOverlay.innerHTML=`<span class="loader"></span> ${e}`,statusOverlay.style.display="flex",resultPanel.classList.remove("visible"),forecastPanel.classList.remove("visible")}
-    function hideStatus(){statusOverlay.style.display="none"}
-    function displayResults(e){const{result:t,request_data:a}=e;if(!t)return hideStatus(),resultPanel.innerHTML=`<div class="location-title">${a.locationName}</div><div class="evidence-details"><p><strong>Error:</strong> Analysis returned no result.</p></div>`,void resultPanel.classList.add("visible");const{risk_assessment:l,weather_forecast:s}=t,o=a.locationName||"Selected Area";resultPanel.innerHTML=`\n            <div class="location-title">${o}</div>\n            <div class="risk-summary risk-${l.risk_level.toLowerCase()}">\n                <h2>${l.risk_level} Risk</h2><p>Confidence: ${l.confidence}</p>\n            </div>\n            <div class="evidence-details">\n                <p>${l.summary.replace(/\*\*/g,"<strong>")}</p>\n                <h4><i class="fa-solid fa-satellite-dish"></i> Historical Vulnerability (SAR)</h4>\n                <p>${l.evidence.historical_vulnerability}</p>\n                <h4><i class="fa-solid fa-cloud-sun-rain"></i> Future Threat (Weather)</h4>\n                <p>${l.evidence.future_threat}</p>\n            </div>\n        `,resultPanel.classList.add("visible"),s&&s.success&&(forecastPanel.classList.add("visible"),populateForecastPanel(s)),activateAnalysisLayers(t)}
-    function activateAnalysisLayers(e){const{historical_context:t}=e;activeLayers.sar=L.tileLayer(t.tile_url,{opacity:.75}),activeLayers.aoi=L.geoJSON(e.analyzed_geojson,{style:{color:"#ff7800",weight:3,fillOpacity:0}});const a=document.querySelector('.layer-item[data-layer-id="sar"]'),l=document.querySelector('.layer-item[data-layer-id="aoi"]');a&&a.classList.remove("inactive"),l&&l.classList.remove("inactive");map.addLayer(activeLayers.aoi),l.classList.add("active"),toggleLayer("sar"),map.fitBounds(activeLayers.aoi.getBounds(),{padding:[50,50]})}
+    function resetDashboard(){resultPanel.classList.remove("visible"),forecastPanel.classList.remove("visible"),clickMarker&&map.removeLayer(clickMarker);if(activeLayers.sar&&map.hasLayer(activeLayers.sar))map.removeLayer(activeLayers.sar);if(activeLayers.aoi&&map.hasLayer(activeLayers.aoi))map.removeLayer(activeLayers.aoi);clickMarker=null,document.getElementById("search-input").value="";const e=document.querySelector('.layer-item[data-layer-id="sar"]'),t=document.querySelector('.layer-item[data-layer-id="aoi"]');e&&(e.classList.add("inactive"),e.innerHTML='<i class="fa-solid fa-satellite-dish"></i> Historical Analysis'),t&&t.classList.add("inactive")}
+    function handleEscKey(e){"Escape"===e.key&&(statusOverlay.style.display!=="none"||resetDashboard())}
+    function showStatus(e){statusOverlay.innerHTML=`<span class="loader"></span> ${e}`,statusOverlay.style.display="flex",resultPanel.classList.remove("visible"),forecastPanel.classList.remove("visible")}function hideStatus(){statusOverlay.style.display="none"}
     function getWeatherIconClass(e){return e>=200&&e<300?"fa-solid fa-cloud-bolt":e>=300&&e<600?"fa-solid fa-cloud-rain":e>=600&&e<700?"fa-solid fa-snowflake":800===e?"fa-solid fa-sun":801===e||802===e?"fa-solid fa-cloud-sun":803===e||804===e?"fa-solid fa-cloud":"fa-solid fa-smog"}
     function populateForecastPanel(e){if(!e||!e.success)return;fullForecastData=e.data;const t=document.getElementById("daily-forecast-container");t.innerHTML="",fullForecastData.daily.time.forEach((e,a)=>{const l=document.createElement("div");l.className="day-forecast",l.dataset.dayIndex=a;const s=(new Date(e)).toLocaleDateString("en-US",{weekday:"short"});l.innerHTML=`\n                <div class="day-name">${0===a?"Today":s}</div>\n                <i class="weather-icon ${getWeatherIconClass(fullForecastData.daily.weathercode[a])}"></i>\n                <div class="temp-range">${Math.round(fullForecastData.daily.temperature_2m_max[a])}°/${Math.round(fullForecastData.daily.temperature_2m_min[a])}°</div>\n            `,l.addEventListener("click",()=>{document.querySelectorAll(".day-forecast").forEach(e=>e.classList.remove("active")),l.classList.add("active"),showHourlyForecast(a)}),t.appendChild(l)}),t.firstChild&&t.firstChild.click()}
     function showHourlyForecast(e){const t=document.getElementById("hourly-forecast-container");if(!fullForecastData.hourly)return t.innerHTML='<p style="text-align:center;width:100%;">Hourly data not available.</p>',void t.classList.add("visible");t.innerHTML="";const a=24*e,l=a+24,s=fullForecastData.hourly.time.slice(a,l),o=fullForecastData.hourly.temperature_2m.slice(a,l);s.forEach((e,r)=>{const n=document.createElement("div");n.className="hour-forecast";const i=(new Date(e)).getHours();n.innerHTML=`\n                <div class="hour-time">${i}:00</div>\n                <i class="weather-icon ${getWeatherIconClass(fullForecastData.hourly.weathercode[a+r])}"></i>\n                <div class="hour-temp">${Math.round(o[r])}°</div>\n            `,t.appendChild(n)}),t.classList.add("visible")}
-    async function triggerAnalysis(e,t,a){showStatus(`Analyzing for ${a}...`);try{const l=await fetch(`${API_BASE_URL}/api/v7/analyze_on_click`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lat:e,lon:t,buffer_degree:.1})});if(!l.ok)throw new Error(`API submit failed with status ${l.status}`);const s=await l.json(),o=`${API_BASE_URL}${s.status_endpoint}`,r=async e=>{const t=await fetch(e),a=await t.json();return"COMPLETED"===a.status||"FAILED"===a.status?a:(await new Promise(resolve=>setTimeout(resolve,3e3)),r(e))},n=await r(o);hideStatus(),"COMPLETED"===n.status?(n.request_data.locationName=a,displayResults(n)):(()=>{throw new Error(n.result.error)})()}catch(e){hideStatus(),resultPanel.innerHTML=`<div class="location-title">${a}</div><div class="evidence-details"><p><strong>Error:</strong> ${e.message}</p></div>`,resultPanel.classList.add("visible")}}
-    map.on("click",async e=>{const{lat:t,lng:a}=e.latlng;clickMarker&&map.removeLayer(clickMarker),clickMarker=L.marker([t,a]).addTo(map);try{const l=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${t}&lon=${a}&accept-language=en`);if(!l.ok)throw new Error("Reverse geocoding service unavailable.");const s=await l.json(),o=s.display_name||"Unknown Location";triggerAnalysis(t,a,o)}catch(e){triggerAnalysis(t,a,`Area @ ${t.toFixed(2)}, ${a.toFixed(2)}`)}});
-    const searchInput=document.getElementById("search-input"),searchButton=document.getElementById("search-button");async function searchLocation(){const e=searchInput.value;if(!e)return;showStatus(`Searching for ${e}...`);try{const t=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(e)}&format=json&limit=1&accept-language=en`);if(!t.ok)throw new Error("Search service unavailable.");const a=await t.json();if(a&&a.length>0){const{lat:e,lon:t,display_name:l}=a[0],s=parseFloat(e),o=parseFloat(t);clickMarker&&map.removeLayer(clickMarker),clickMarker=L.marker([s,o]).addTo(map),map.setView([s,o],11),triggerAnalysis(s,o,l)}else hideStatus(),resultPanel.innerHTML=`<p style="padding: 15px; text-align: center;">Error: Location "<strong>${e}</strong>" not found.</p>`,resultPanel.classList.add("visible")}catch(e){hideStatus(),resultPanel.innerHTML=`<p style="padding: 15px; text-align: center;">Error: Search service failed. Please try again later.</p>`,resultPanel.classList.add("visible")}}
-    searchButton.addEventListener("click",searchLocation),searchInput.addEventListener("keydown",e=>{"Enter"===e.key&&searchLocation()});
-</script>
+    async function triggerAnalysis(e,t,a){showStatus(`Analyzing for ${a}...`);try{const l={lat:e,lon:t,buffer_degree:.1,analysis_type:currentAnalysisMode},s=await fetch(`${API_BASE_URL}/api/v9/analyze`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(l)});if(!s.ok)throw new Error(`API submit failed with status ${s.status}`);const o=await s.json(),r=`${API_BASE_URL}${o.status_endpoint}`,n=async e=>{const t=await fetch(e),a=await t.json();return"COMPLETED"===a.status||"FAILED"===a.status?a:(await new Promise(resolve=>setTimeout(resolve,3e3)),n(e))},i=await n(r);hideStatus(),"COMPLETED"===i.status?(i.request_data.locationName=a,displayResults(i)):(()=>{throw new Error(i.result.error)})()}catch(e){hideStatus(),resultPanel.innerHTML=`<div class="location-title">${a}</div><div class="evidence-details"><p><strong>Error:</strong> ${e.message}</p></div>`,resultPanel.classList.add("visible")}}
+    async function handleMapClick(e){const{lat:t,lng:a}=e.latlng;clickMarker&&map.removeLayer(clickMarker),clickMarker=L.marker([t,a]).addTo(map);try{const l=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${t}&lon=${a}&accept-language=en`);if(!l.ok)throw new Error("Reverse geocoding service unavailable.");const s=await l.json(),o=s.display_name||"Unknown Location";triggerAnalysis(t,a,o)}catch(e){triggerAnalysis(t,a,`Area @ ${t.toFixed(2)}, ${a.toFixed(2)}`)}}
+    async function searchLocation(){const e=searchInput.value;if(!e)return;showStatus(`Searching for ${e}...`);try{const t=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(e)}&format=json&limit=1&accept-language=en`);if(!t.ok)throw new Error("Search service unavailable.");const a=await t.json();if(a&&a.length>0){const{lat:e,lon:t,display_name:l}=a[0],s=parseFloat(e),o=parseFloat(t);clickMarker&&map.removeLayer(clickMarker),clickMarker=L.marker([s,o]).addTo(map),map.setView([s,o],11),triggerAnalysis(s,o,l)}else hideStatus(),resultPanel.innerHTML=`<p style="padding: 15px; text-align: center;">Error: Location "<strong>${e}</strong>" not found.</p>`,resultPanel.classList.add("visible")}catch(e){hideStatus(),resultPanel.innerHTML=`<p style="padding: 15px; text-align: center;">Error: Search service failed. Please try again later.</p>`,resultPanel.classList.add("visible")}}
+    
+    document.addEventListener('DOMContentLoaded', initializeApp);
 
+</script>
 </body>
 </html>

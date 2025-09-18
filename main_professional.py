@@ -9,22 +9,17 @@ import time
 import requests
 import ee
 
-# Import our ultimate, robust GEE functions module
-# Ensure 'gee_functions_professional.py' (the ultimate "defensive programming" version) is in the same directory.
+# Ensure 'gee_functions_professional.py' (the ultimate dual-core version) is in the same directory.
 import gee_functions_professional as gee_pro
 
-# --- API Models ---
-
+# --- [V9] Final API Models - Simplified for better UX ---
 class OnClickAnalysisRequest(BaseModel):
-    lat: float = Field(..., example=5.95)
-    lon: float = Field(..., example=102.25)
-    buffer_degree: Optional[float] = Field(0.05)
+    lat: float = Field(..., example=1.557)
+    lon: float = Field(..., example=110.35)
+    analysis_type: str = Field(..., example="flood", description="Type of analysis: 'flood' or 'deforestation'")
+    buffer_degree: Optional[float] = Field(0.1)
 
 class AnalysisTask(BaseModel):
-    """
-    [V7.1 Fix] Added request_data to ensure locationName can be passed through the API response.
-    The model is now robust for all task states (PENDING, RUNNING, COMPLETED, FAILED).
-    """
     task_id: str
     status: str
     submitted_at: float
@@ -40,16 +35,12 @@ class AnalysisSubmitResponse(BaseModel):
 # --- In-memory Task Storage ---
 TASKS: Dict[str, Dict] = {}
 
-# --- [V7.1] Core Backend Logic ---
+# --- Helper Functions (Weather & XAI) ---
 def get_weather_forecast(lat: float, lon: float) -> Dict[str, Any]:
-    """
-    Gets 7-day daily and hourly weather forecast from Open-Meteo API.
-    """
     try:
         base_url = "https://api.open-meteo.com/v1/forecast"
         params = {
-            "latitude": lat,
-            "longitude": lon,
+            "latitude": lat, "longitude": lon,
             "hourly": "temperature_2m,weathercode",
             "daily": "weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,windspeed_10m_max",
             "timezone": "Asia/Kuala_Lumpur"
@@ -61,20 +52,14 @@ def get_weather_forecast(lat: float, lon: float) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 def generate_risk_assessment_hypothesis(historical_analysis: Dict, forecast_data: Dict) -> Dict:
-    """
-    Fuses historical vulnerability (from SAR) with future weather threats (from forecast)
-    to generate an explainable risk assessment. This is a rule-based XAI engine.
-    """
     risk_level, confidence, primary_cause = "Low", "Medium", "No significant threats identified."
     historical_flood_area = historical_analysis.get("area_sq_km", 0)
-    
     if not forecast_data.get("success"):
         risk_level, primary_cause = "Indeterminate", "Could not retrieve weather forecast data."
     else:
         daily_forecast = forecast_data["data"]["daily"]
         precip_3_days = sum(daily_forecast.get("precipitation_sum", [0])[:3])
         prob_3_days = max(daily_forecast.get("precipitation_probability_max", [0])[:3])
-        
         if historical_flood_area > 1.0 and precip_3_days > 50 and prob_3_days > 70:
             risk_level, confidence, primary_cause = "High", "High", f"Area is historically vulnerable (recent flood of {historical_flood_area:.2f} sq km). Forecast predicts significant rainfall ({precip_3_days:.1f} mm over 3 days) with high probability ({prob_3_days}%)."
         elif precip_3_days > 80 and prob_3_days > 75:
@@ -83,61 +68,117 @@ def generate_risk_assessment_hypothesis(historical_analysis: Dict, forecast_data
             risk_level, confidence, primary_cause = "Medium", "Medium", "Area is historically vulnerable. While the forecast rainfall is moderate, it may be sufficient to trigger localized flooding."
         else:
             primary_cause = f"No significant recent flooding detected and forecast rainfall is low ({precip_3_days:.1f} mm over 3 days)."
-            
     return {"risk_level": risk_level, "confidence": confidence, "summary": f"The flood risk for the next 3-5 days is assessed as **{risk_level}**.", "evidence": {"historical_vulnerability": f"Analysis of the past 90 days shows a maximum flood extent of {historical_flood_area:.2f} sq km.", "future_threat": primary_cause}}
 
+def generate_deforestation_hypothesis(gee_result, geometry, period1_str, period2_str):
+    deforestation_area_km2 = gee_pro.get_area_stats(gee_result, geometry) / 1_000_000
+    summary = f"Detected approximately {deforestation_area_km2:.2f} sq km of potential deforestation."
+    if deforestation_area_km2 < 0.1:
+        summary = "No significant deforestation detected when comparing the two periods."
+    story = {
+        "title": "Deforestation 'Then vs. Now' Analysis", "confidence": "High",
+        "summary": summary,
+        "evidence": [
+            {"indicator": "SAR & Optical Fusion", "finding": "Result based on a drop in both SAR backscatter (surface roughness) and NDVI (vegetation health)."},
+            {"indicator": "Comparison Period", "finding": f"Analyzed changes between a historical baseline ({period1_str}) and the recent period ({period2_str})."},
+        ],
+        "next_steps": "Recommend cross-validation with high-resolution imagery or field reports."
+    }
+    return {"story": story, "area_sq_km": round(deforestation_area_km2, 2)}
+
+# --- [V9] Ultimate Background Task Runner with Smart "Then vs Now" Logic ---
 def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
-    """
-    The ultimate background task runner that dynamically creates an AOI from a point,
-    runs SAR analysis, gets weather forecast, and fuses them into a risk assessment.
-    """
     TASKS[task_id]['status'] = "RUNNING"
     try:
         request_data = request.dict()
         lat, lon, buffer = request_data['lat'], request_data['lon'], request_data['buffer_degree']
+        analysis_type = request_data['analysis_type']
         
         clicked_point = ee.Geometry.Point([lon, lat])
         analysis_geometry = clicked_point.buffer(buffer * 111320).bounds()
         
-        today = datetime.utcnow()
-        analysis_date = (today - timedelta(days=15)).strftime('%Y-%m-%d')
-        
-        gee_results = gee_pro.analyze_flood_ultimate(geometry=analysis_geometry, analysis_date=analysis_date, before_days=90, after_days=15)
-        historical_flood_mask = gee_results['final_flood_mask']
-        historical_area_km2 = gee_pro.get_area_stats(historical_flood_mask, analysis_geometry) / 1_000_000
-        historical_tile_url = gee_pro.get_tile_url(historical_flood_mask, {'palette': ['#0000FF'], 'min': 0, 'max': 1})
-        
-        historical_analysis = {"area_sq_km": round(historical_area_km2, 2), "tile_url": historical_tile_url}
-        forecast_data = get_weather_forecast(lat, lon)
-        risk_assessment = generate_risk_assessment_hypothesis(historical_analysis, forecast_data)
-        
-        result_payload = {"risk_assessment": risk_assessment, "historical_context": historical_analysis, "weather_forecast": forecast_data, "analyzed_geojson": analysis_geometry.getInfo()}
-        
+        result_payload = {}
+
+        if analysis_type == 'flood':
+            today = datetime.utcnow()
+            analysis_date = (today - timedelta(days=15)).strftime('%Y-%m-%d')
+            gee_results = gee_pro.analyze_flood_ultimate(geometry=analysis_geometry, analysis_date=analysis_date)
+            
+            historical_flood_mask = gee_results['final_flood_mask']
+            historical_area_km2 = gee_pro.get_area_stats(historical_flood_mask, analysis_geometry) / 1_000_000
+            
+            historical_analysis = {"area_sq_km": historical_area_km2}
+            forecast_data = get_weather_forecast(lat, lon)
+            risk_assessment = generate_risk_assessment_hypothesis(historical_analysis, forecast_data)
+
+            result_payload = {
+                "analysis_type": "flood",
+                "risk_assessment": risk_assessment,
+                "historical_context": {
+                    "area_sq_km": round(historical_area_km2, 2),
+                    "tile_url": gee_pro.get_tile_url(historical_flood_mask, {'palette': ['#0000FF'], 'min': 0, 'max': 1})
+                },
+                "weather_forecast": forecast_data,
+                "analyzed_geojson": analysis_geometry.getInfo()
+            }
+
+        elif analysis_type == 'deforestation':
+            today = datetime.utcnow()
+            end_date_recent = today.strftime('%Y-%m-%d')
+            start_date_recent = (today - timedelta(days=90)).strftime('%Y-%m-%d')
+            end_date_historical = (today - timedelta(days=365)).strftime('%Y-%m-%d')
+            start_date_historical = (today - timedelta(days=365 + 90)).strftime('%Y-%m-%d')
+            
+            gee_results_mask = gee_pro.analyze_deforestation_between_periods(
+                geometry=analysis_geometry,
+                start_date_period1=start_date_historical,
+                end_date_period1=end_date_historical,
+                start_date_period2=start_date_recent,
+                end_date_period2=end_date_recent
+            )
+            
+            hypothesis_data = generate_deforestation_hypothesis(
+                gee_results_mask,
+                analysis_geometry,
+                f"~{start_date_historical}",
+                f"~{end_date_recent}"
+            )
+
+            result_payload = {
+                "analysis_type": "deforestation",
+                "analysis_report": hypothesis_data,
+                "deforestation_context": {
+                    "area_sq_km": hypothesis_data['area_sq_km'],
+                    "tile_url": gee_pro.get_tile_url(gee_results_mask, {'palette': ['#FF0000'], 'min': 0, 'max': 1})
+                },
+                "analyzed_geojson": analysis_geometry.getInfo()
+            }
+
         TASKS[task_id]['status'] = "COMPLETED"
         TASKS[task_id]['result'] = result_payload
         TASKS[task_id]['completed_at'] = time.time()
-        
+
     except Exception as e:
         TASKS[task_id]['status'] = "FAILED"
         TASKS[task_id]['result'] = {"error": f"Backend task failed: {type(e).__name__} - {str(e)}"}
         TASKS[task_id]['completed_at'] = time.time()
 
-# --- FastAPI App & Routes (V7.1) ---
-app = FastAPI(title="Dynamic Interactive SAR-Weather Analysis API", version="7.1.0")
+# --- FastAPI App & Routes (V9) ---
+app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="9.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 @app.get("/", tags=["General"])
 def read_root():
-    return {"message": "Welcome to the Dynamic Interactive Analysis API! See /docs for details."}
+    return {"message": "Welcome to the Smart Analysis API! See /docs for details."}
 
-@app.post("/api/v7/analyze_on_click", response_model=AnalysisSubmitResponse, status_code=202, tags=["Interactive Analysis"])
-async def submit_on_click_analysis(request: OnClickAnalysisRequest, background_tasks: BackgroundTasks):
+@app.post("/api/v9/analyze", response_model=AnalysisSubmitResponse, status_code=202, tags=["Interactive Analysis"])
+async def submit_analysis(request: OnClickAnalysisRequest, background_tasks: BackgroundTasks):
     task_id = str(uuid.uuid4())
     TASKS[task_id] = {"task_id": task_id, "status": "PENDING", "submitted_at": time.time(), "request_data": request.dict(), "result": None, "completed_at": None}
     background_tasks.add_task(run_on_click_analysis_task, task_id, request)
-    return {"message": "Dynamic analysis task submitted successfully for the clicked location.", "task_id": task_id, "status_endpoint": f"/api/v7/tasks/{task_id}"}
+    return {"message": "Smart analysis task submitted successfully.", "task_id": task_id, "status_endpoint": f"/api/v9/tasks/{task_id}"}
 
-@app.get("/api/v7/tasks/{task_id}", response_model=AnalysisTask, tags=["Interactive Analysis"])
+@app.get("/api/v9/tasks/{task_id}", response_model=AnalysisTask, tags=["Interactive Analysis"])
 def get_task_status(task_id: str):
     task = TASKS.get(task_id)
     if not task:
