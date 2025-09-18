@@ -17,7 +17,7 @@ This project is a submission for the **"Through the Radar Looking Glass: Reveali
 
 ---
 
-Our Approach to the Challenge
+## 챌린지 대응 접근법 (Our Approach to the Challenge)
 
 The "Through the Radar Looking Glass" challenge is not just about processing SAR data; it's a call to become a data detective. It asks us to solve riddles hidden within radar imagery, to hypothesize about the unseen forces shaping our planet, and to tell a compelling story with our findings. Our platform was architected from the ground up to answer these core questions.
 
@@ -40,63 +40,28 @@ The "Through the Radar Looking Glass" challenge is not just about processing SAR
 
 ---
 
-## ✨ Core Features
+## ✨ Key Features
 
-Our platform is built on three foundational pillars: **On-Demand Analysis**, **Intelligent Fusion**, and **Immersive Experience**.
-
-#### 🛰️ Dual-Core Analysis Engine
-Seamlessly switch between two powerful, on-demand analysis modes with a single click:
-
-*   **🌊 Flood Risk Assessment:**
-    *   **Retrospective Analysis:** Utilizes 90 days of historical Sentinel-1 SAR data to calculate a quantitative **"Historical Vulnerability Index"** for the selected area.
-    *   **Predictive Insight:** Fuses this vulnerability index with a 7-day weather forecast to generate a forward-looking, actionable risk level (Low, Medium, High).
-
-*   **🌲 Deforestation "Then vs. Now" Watch:**
-    *   **Zero-Input Intelligence:** Users no longer need to know *when* deforestation occurred. Our backend **intelligently compares** the last 3 months of satellite data against a historical baseline from the previous year to automatically detect recent deforestation.
-    *   **Multi-Source Validation:** The algorithm confirms deforestation by detecting a drop in **both** SAR backscatter (indicating a change in surface roughness) and optical NDVI (indicating a loss of vegetation health), significantly reducing false positives.
-
-#### 🧠 Explainable AI (XAI) Engine
-We don't just show data; we tell its story. Every analysis is accompanied by a clear, evidence-based report that explains *why* a conclusion was reached, detailing the SAR, optical, and meteorological drivers.
-
-#### 🎨 Immersive UI/UX inspired by Windy.com
-*   **Map as Interface:** A full-screen, dark-themed map is the heart of the application.
-*   **Dynamic Data Layers:** A professional, always-visible right-side panel allows users to instantly toggle between multiple global data layers:
-    *   **Live Weather Radar** (from RainViewer)
-    *   **Forecast Layers** (Wind, Precipitation, Temp from OWM)
-    *   **Our Unique SAR Analysis Results** (Flood or Deforestation)
-*   **Interactive Controls:** Floating panels, an interactive forecast timeline, and seamless transitions create a fluid and engaging user experience.
-*   **Live Global Data:** The map is populated with live temperature labels for major cities, making the world feel alive and data-rich from the moment you arrive.
+- **🛰️ Dual-Core Analysis Engine:** Seamlessly switch between Flood Risk Assessment and our intelligent "Then vs. Now" Deforestation Watch.
+- **🌍 Global On-Demand & Interactive:** Click anywhere or search for any location to get an instant, localized analysis.
+- **🧠 Explainable AI (XAI) Engine:** Every result is accompanied by a clear, evidence-based report.
+- **🎨 Immersive UI/UX:** A full-screen, dark-themed map with floating panels and live global temperature data.
+- **📡 Multi-Layer Data Exploration:** Instantly toggle between Live Weather Radar (RainViewer), weather forecasts (OWM), and our unique SAR analysis results.
 
 ---
 
 ## 🛠️ Technology Architecture
 
-Our system is designed with a modern, decoupled architecture for scalability and robustness.
-
-
-*(A simplified architecture diagram illustrating the data flow.)*
-
-*   **Frontend (`dashboard_windy_final.html`):**
-    *   **Core:** Built with pure **HTML5, CSS3, and Vanilla JavaScript (ES6)** for maximum performance and zero dependencies.
-    *   **Mapping:** **Leaflet.js** for a lightweight, powerful interactive map.
-    *   **Real-time Layers:** Dynamically integrates tile layers from **OpenWeatherMap** (forecasts) and **RainViewer** (live radar).
-
-*   **Backend (`main_professional.py`):**
-    *   **Framework:** A high-performance asynchronous API built with **Python 3.10** and **FastAPI**.
-    *   **Geospatial Engine:** All heavy-duty satellite data processing is delegated to the **Google Earth Engine (GEE) Python API**, leveraging Google's planetary-scale computational power.
-    *   **Asynchronous Tasks:** Analysis requests are handled as background tasks to ensure the API remains responsive.
-    *   **API Endpoints:**
-        *   `POST /api/v9/analyze`: The single, intelligent endpoint that receives a location and analysis type, and orchestrates the entire backend workflow.
-        *   `GET /api/v9/tasks/{task_id}`: Allows the frontend to poll for the status and results of an analysis task.
+*   **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6), Leaflet.js
+*   **Backend:** Python 3.10, FastAPI, Google Earth Engine (GEE) Python API
+*   **Data Sources:** NASA/ESA Sentinel-1, OpenWeatherMap, Open-Meteo, Nominatim Geocoding, RainViewer
 
 ---
 
 ## 🚀 How to Run Locally
 
 ### Prerequisites
-*   Git
-*   Python 3.10+
-*   A Google Earth Engine enabled account
+*   Git, Python 3.10+, A Google Earth Engine enabled account
 
 ### Setup & Execution
 1.  **Clone the repository:**
@@ -106,44 +71,27 @@ Our system is designed with a modern, decoupled architecture for scalability and
     ```
 2.  **Backend Setup:**
     ```bash
-    # Navigate to the backend directory from the project root
-    # (Assuming you are using the flat structure)
-    
-    # Create and activate a Python virtual environment (e.g., env)
+    # (From the project root directory)
     python -m venv env
-    
-    # On Windows
     .\env\Scripts\activate
-    
-    # On macOS/Linux
-    # source env/bin/activate
-    
-    # Install dependencies
     pip install -r requirements.txt
-    
-    # Authenticate with Google Earth Engine (a one-time setup)
     earthengine authenticate
-    
-    # Run the server
     uvicorn main_professional:app --reload
     ```
-    - The backend will be running at `http://127.0.0.1:8000`.
-
 3.  **Frontend Setup:**
     *   Get a **free API key** from [OpenWeatherMap](https://openweathermap.org/appid).
-    *   Open the project's main HTML file (e.g., `dashboard_windy_final.html`) in a text editor.
-    *   Replace the placeholder `'YOUR_OPENWEATHERMAP_API_KEY'` with your actual key.
-    *   Open the same HTML file in your web browser.
+    *   Open `dashboard_windy_final.html` in a text editor.
+    *   Replace `'YOUR_OPENWEATHERMAP_API_KEY'` with your actual key.
+    *   Open the `dashboard_windy_final.html` file in your web browser.
 
 ---
 
 ## 🌟 Future Vision (Level 3)
 
-While our current platform is a fully functional prototype, we have a clear vision for its evolution into a true AI-powered predictive engine:
-
-1.  **Phase 1 - Automated Data Curation:** Develop a pipeline to systematically analyze decades of historical SAR and weather data, creating a massive, labeled dataset of weather events and their corresponding flood/deforestation outcomes.
-2.  **Phase 2 - Predictive Model Training:** Train an **Adaptive Neuro-Fuzzy Inference System (ANFIS)** on this dataset. This model will learn the complex, non-linear relationships and be able to *predict* the probability and scale of a flood based purely on weather *forecast* data.
-3.  **Phase 3 - AI Explainability with SHAP:** Integrate the **SHAP (SHapley Additive exPlanations)** library to make our AI model's predictions transparent. This will allow us to precisely quantify which forecast parameter (e.g., precipitation sum, wind speed) contributed most to a specific risk assessment, providing unparalleled, trustworthy insights for decision-makers.
+Our current platform is a fully functional prototype. Our vision is to evolve it into a true AI-powered predictive engine:
+1.  **Phase 1 - Automated Data Curation:** Create a massive, labeled dataset of historical weather events and their corresponding SAR-detected outcomes.
+2.  **Phase 2 - Predictive Model Training:** Train an **Adaptive Neuro-Fuzzy Inference System (ANFIS)** to predict flood scale based purely on weather *forecasts*.
+3.  **Phase 3 - AI Explainability with SHAP:** Integrate **SHAP** to make our AI model's predictions transparent, quantifying the contribution of each weather parameter to the final risk score.
 
 ---
 
