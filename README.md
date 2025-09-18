@@ -17,7 +17,7 @@ This project is a submission for the **"Through the Radar Looking Glass: Reveali
 
 ---
 
-## 챌린지 대응 접근법 (Our Approach to the Challenge)
+## Challenge Response Approach (Our Approach to the Challenge)
 
 The "Through the Radar Looking Glass" challenge is not just about processing SAR data; it's a call to become a data detective. It asks us to solve riddles hidden within radar imagery, to hypothesize about the unseen forces shaping our planet, and to tell a compelling story with our findings. Our platform was architected from the ground up to answer these core questions.
 
