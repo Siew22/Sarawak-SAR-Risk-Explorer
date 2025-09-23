@@ -242,9 +242,11 @@
             return;
         }
 
+        // Stop any previous animations and hide panels
         stopRadarAnimation();
-        radarTimelinePanel.style.display = 'none';
+        if (radarTimelinePanel) radarTimelinePanel.style.display = 'none';
 
+        // Deactivate all layers except AOI toggle
         document.querySelectorAll('#layer-list .layer-item').forEach(li => {
             const currentId = li.dataset.layerId;
             if (currentId !== 'aoi') {
@@ -254,20 +256,22 @@
                 }
             }
         });
-        
+    
+        // Activate the selected layer
         if (item) item.classList.add('active');
 
         if (layerId === 'radar') {
-            startRadarAnimation();
-        } else if (activeLayers[layerId] && !map.hasLayer(activeLayers[layerId])) {
-            map.addLayer(activeLayers[layerId]);
+            startRadarAnimation(); // This will handle its own loading messages
+        } else if (activeLayers[layerId]) {
+            if (!map.hasLayer(activeLayers[layerId])) map.addLayer(activeLayers[layerId]);
         }
-        
+    
+        // Handle the AOI toggle independently
         const aoiItem = document.querySelector('.layer-item[data-layer-id="aoi"]');
         if (layerId === 'aoi') {
             if (aoiItem) aoiItem.classList.toggle('active');
         }
-        
+
         if (aoiItem && aoiItem.classList.contains('active') && activeLayers.aoi && !map.hasLayer(activeLayers.aoi)) {
             map.addLayer(activeLayers.aoi);
         } else if (aoiItem && !aoiItem.classList.contains('active') && activeLayers.aoi && map.hasLayer(activeLayers.aoi)) {
@@ -275,7 +279,117 @@
         }
     }
     
-    async function startRadarAnimation(){try{const e=await fetch("https://api.rainviewer.com/public/weather-maps.json");if(!e.ok)throw new Error("RainViewer API failed");const t=await e.json(),a=t.radar;stopRadarAnimation(),radarLayers=a.nowcast.map(e=>L.tileLayer(t.host+e.path+"/512/{z}/{x}/{y}/2/1_1.png",{opacity:0,zIndex:e.time}));let l=radarLayers.length-1;const s=document.getElementById("radar-play-button"),o=document.getElementById("radar-slider"),r=document.getElementById("radar-timestamp");function n(e){radarLayers.forEach((t,a)=>{a===e?(map.hasLayer(t)||map.addLayer(t),t.setOpacity(.8)):map.hasLayer(t)&&map.removeLayer(t)});const t=new Date(1e3*a.nowcast[e].time);r.textContent=t.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),o.value=e}function i(){s.innerHTML='<i class="fa-solid fa-pause"></i>',radarAnimation=setInterval(()=>{l=(l+1)%radarLayers.length,n(l)},500)}stopRadarAnimation=function(){clearInterval(radarAnimation),radarAnimation=null,s&&(s.innerHTML='<i class="fa-solid fa-play"></i>'),radarLayers.forEach(e=>{map.hasLayer(e)&&map.removeLayer(e)}),radarLayers=[]},s.onclick=()=>{radarAnimation?(clearInterval(radarAnimation),radarAnimation=null,s.innerHTML='<i class="fa-solid fa-play"></i>'):i()},o.oninput=e=>{clearInterval(radarAnimation),radarAnimation=null,s.innerHTML='<i class="fa-solid fa-play"></i>',l=parseInt(e.target.value,10),n(l)},radarTimelinePanel.style.display="flex",o.max=radarLayers.length-1,n(l)}catch(e){console.error("Failed to load RainViewer data:",e),showActionTooltip("Could not load live radar data.")}}
+    async function startRadarAnimation() {
+    showActionTooltip("Loading live radar...");
+    
+    const maxRetries = 2;
+    let attempt = 0;
+
+    while (attempt < maxRetries) {
+        try {
+            const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+            if (!response.ok) throw new Error(`RainViewer API returned status ${response.status}`);
+            const data = await response.json();
+            
+            // If successful, stop retrying and run the animation
+            runRadarAnimation(data);
+            return; // Exit the function successfully
+
+        } catch (error) {
+            console.error(`Attempt ${attempt + 1} to load RainViewer data failed:`, error);
+            attempt++;
+            if (attempt < maxRetries) {
+                // Wait 2 seconds before retrying
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            } else {
+                // All retries failed
+                hideStatus(); // Hide any global status like "Analyzing..."
+                showActionTooltip("Could not load live radar data. Please try again later.");
+                
+                // Deactivate the radar button to allow user to select another layer
+                const radarItem = document.querySelector('.layer-item[data-layer-id="radar"]');
+                if (radarItem) radarItem.classList.remove('active');
+            }
+        }
+    }
+}
+
+// [New] We are separating the animation logic into its own function
+function runRadarAnimation(data) {
+    const radarData = data.radar;
+    stopRadarAnimation(); // Ensure any previous instances are cleared
+
+    radarLayers = radarData.nowcast.map(frame => 
+        L.tileLayer(data.host + frame.path + '/512/{z}/{x}/{y}/2/1_1.png', {
+            opacity: 0,
+            zIndex: frame.time
+        })
+    );
+
+    let currentIndex = radarLayers.length - 1; // Start with the latest frame
+    const playButton = document.getElementById('radar-play-button');
+    const slider = document.getElementById('radar-slider');
+    const timestampDiv = document.getElementById('radar-timestamp');
+
+    if (!playButton || !slider || !timestampDiv) return; // Defensive check
+
+    slider.max = radarLayers.length - 1;
+    
+    function showFrame(index) {
+        if (index < 0 || index >= radarLayers.length) return; // Bounds check
+        radarLayers.forEach((layer, i) => {
+            if (i === index) {
+                if (!map.hasLayer(layer)) map.addLayer(layer);
+                layer.setOpacity(0.8);
+            } else {
+                if (map.hasLayer(layer)) map.removeLayer(layer);
+            }
+        });
+        const frameTime = new Date(radarData.nowcast[index].time * 1000);
+        timestampDiv.textContent = frameTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        slider.value = index;
+    }
+
+    function play() {
+        playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        radarAnimation = setInterval(() => {
+            currentIndex = (currentIndex + 1) % radarLayers.length;
+            showFrame(currentIndex);
+        }, 500);
+    }
+    
+    // Redefine stop function in this scope
+    stopRadarAnimation = function() {
+        clearInterval(radarAnimation);
+        radarAnimation = null;
+        if (playButton) playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+        radarLayers.forEach(layer => {
+            if (map.hasLayer(layer)) map.removeLayer(layer);
+        });
+        radarLayers = [];
+    };
+
+    playButton.onclick = () => {
+        if (radarAnimation) {
+            clearInterval(radarAnimation);
+            radarAnimation = null;
+            playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+        } else {
+            play();
+        }
+    };
+    
+    slider.oninput = (e) => {
+        clearInterval(radarAnimation);
+        radarAnimation = null;
+        playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+        currentIndex = parseInt(e.target.value, 10);
+        showFrame(currentIndex);
+    };
+
+    radarTimelinePanel.style.display = 'flex';
+    showFrame(currentIndex);
+}
     function stopRadarAnimation(){}
     
     let debounceTimer;async function updateLiveTemperatures(){if(!OWM_API_KEY||"YOUR_OPENWEATHERMAP_API_KEY"===OWM_API_KEY)return;clearTimeout(debounceTimer),debounceTimer=setTimeout(async()=>{const e=map.getCenter(),t=e.lat,a=e.lng;try{const e=await fetch(`https://api.openweathermap.org/data/2.5/find?lat=${t}&lon=${a}&cnt=50&appid=${OWM_API_KEY}&units=metric`);if(!e.ok)return;const l=await e.json();temperatureLayerGroup.clearLayers(),l.list&&l.list.forEach(e=>{const t=L.divIcon({className:"temperature-label",html:`<div>${Math.round(e.main.temp)}°</div><span class="city-name">${e.name}</span>`});L.marker([e.coord.lat,e.coord.lon],{icon:t}).addTo(temperatureLayerGroup)})}catch(e){console.error("Failed to fetch live temperatures:",e)}},500)}
