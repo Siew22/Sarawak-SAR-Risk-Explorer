@@ -1,7 +1,7 @@
 import ee
 
 try:
-    ee.Initialize()
+    ee.Initialize(project='red-provider-454106-h8')
     print("Google Earth Engine Initialized Successfully (Ultimate Dual-Core Version).")
 except Exception as e:
     print(f"GEE Initialization Failed: {e}")
