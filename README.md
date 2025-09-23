@@ -15,6 +15,9 @@ This project is a submission for the **"Through the Radar Looking Glass: Reveali
 [![Project Demo GIF]([PASTE_YOUR_GIF_LINK_HERE])]([PASTE_A_LINK_TO_YOUR_YOUTUBE_DEMO_VIDEO_HERE]) 
 *Click the image above to watch a full video demonstration of our platform in action.*
 
+Access Public URL Website to Explore the Web App interface and function
+https://sarawak-sar-risk-explorer.vercel.app/
+
 ---
 
 ## Challenge Response Approach (Our Approach to the Challenge)
