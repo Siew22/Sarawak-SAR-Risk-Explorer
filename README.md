@@ -17,7 +17,7 @@ This project is a submission for the **"Through the Radar Looking Glass: Reveali
 
 Access Public URL Website to Explore the Web App interface and function
 
-https://sarawak-sar-risk-explorer.vercel.app/
+[https://sarawak-sar-risk-explorer.vercel.app/](https://sarawak-sar-risk-explorer-git-main-chiu-siew-sengs-projects.vercel.app?_vercel_share=6zALNX4ybJRtlfPFxprzTOHA4J8OKAUU)
 
 ---
 
