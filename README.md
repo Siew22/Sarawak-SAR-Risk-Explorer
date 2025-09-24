@@ -8,6 +8,8 @@
 
 This project is a submission for the **"Through the Radar Looking Glass: Revealing Earth Processes with SAR"** challenge. We didn't just build a tool; we created an immersive exploration experience. Our platform empowers any user—from a concerned citizen to a policy maker—to click anywhere on Earth and instantly receive a sophisticated, AI-driven analysis of environmental changes and risks, explained in clear, simple terms.
 
+main_completely_framework_interface_platform_is_index.html_ya, the spare.html is just for my spare only ya, if you wanted to see also can.
+
 ---
 
 ## 🚀 Live Demo & Presentation
