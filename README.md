@@ -61,6 +61,46 @@ The "Through the Radar Looking Glass" challenge is not just about processing SAR
 *   **Data Sources:** NASA/ESA Sentinel-1, OpenWeatherMap, Open-Meteo, Nominatim Geocoding, RainViewer
 
 ---
+## System Architecture
+graph TD
+    subgraph User_Interface [User Interface]
+        A["User (Web Browser)"]
+    end
+
+    subgraph Frontend [Frontend (Vercel)]
+        B["dashboard_windy_final.html (HTML, CSS, JS, Leaflet)"]
+    end
+    
+    subgraph Backend [Backend (Local Docker via ngrok)]
+        C["FastAPI Backend (main_professional.py)"]
+    end
+
+    subgraph External_APIs [External APIs]
+        D["Google Earth Engine (Sentinel-1/2, JRC Water)"]
+        E["Weather Services (OWM, Open-Meteo)"]
+        F["Real-time Services (RainViewer, Nominatim)"]
+    end
+
+    A -- "User Interaction" --> B
+    B -- "API Request" --> C
+    C -- "Analysis Task" --> D
+    C -- "Forecast Request" --> E
+    B -- "Live Data Request" --> F
+    
+    D -- "Processed Data" --> C
+    E -- "Forecast Data" --> C
+    F -- "Live Tiles / Geocode" --> B
+
+    C -- "Task Result (JSON)" --> B
+    B -- "Renders Map & Report" --> A
+
+    classDef frontend fill:#3182ce,stroke:#2c5282,color:#fff
+    classDef backend fill:#805ad5,stroke:#553c9a,color:#fff
+    classDef api fill:#38a169,stroke:#276749,color:#fff
+
+    class A,B frontend
+    class C backend
+    class D,E,F api
 
 ## 🚀 How to Run Locally
 
