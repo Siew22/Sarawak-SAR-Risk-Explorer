@@ -1,7 +1,7 @@
 services:
   backend-app:
     build: .
-    container_name: sar-backend-app-service
+    container_name: throughtheradarlookingglassrevealingearthprocesseswithsar-backend-app:latest
     restart: always
     volumes:
       - "${USERPROFILE}/.config/earthengine:/root/.config/earthengine"
@@ -10,7 +10,7 @@ services:
 
   ngrok:
     image: ngrok/ngrok:latest
-    container_name: sar-ngrok-service
+    container_name: throughtheradarlookingglassrevealingearthprocesseswithsar-backend-app:latest
     restart: always
     ports:
       - "4040:4040"
