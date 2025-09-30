@@ -9,8 +9,6 @@ import uuid
 import time
 import requests
 import ee
-from pyngrok import ngrok, conf # [V14] Import pyngrok
-from contextlib import asynccontextmanager # [V14.1] Import asynccontextmanager
 
 
 # Ensure 'gee_functions_professional.py' (the ultimate dual-core version) is in the same directory.
@@ -167,71 +165,23 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
         TASKS[task_id]['result'] = {"error": f"Backend task failed: {type(e).__name__} - {str(e)}"}
         TASKS[task_id]['completed_at'] = time.time()
 
-# [V14.2 Final Fix] Add extensive logging and fail-safe checks to the lifespan event
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("===================================================================")
-    print("🚀 APPLICATION STARTUP SEQUENCE INITIATED...")
-    print("===================================================================")
-    
-    ngrok_tunnel = None
-    try:
-        ngrok_authtoken = os.getenv("NGROK_AUTHTOKEN")
-        
-        if not ngrok_authtoken:
-            print("❌ FATAL: NGROK_AUTHTOKEN environment variable not found or is empty.")
-            print("Tunnel will not be started. The application will only be available inside the Docker network.")
-        else:
-            print(f"🔑 Found NGROK_AUTHTOKEN, attempting to set...")
-            ngrok.set_auth_token(ngrok_authtoken)
-            print("✅ Ngrok authtoken set successfully.")
-            
-            print("🚇 Attempting to connect to ngrok service...")
-            # Use a slightly more robust connection method
-            conf.get_default().region = 'ap' # Specify Asia/Pacific region
-            ngrok_tunnel = ngrok.connect(8000, "http")
-            
-            print("\n" * 2)
-            print("===================================================================")
-            print(f"🎉🎉🎉 Ngrok Tunnel is LIVE and ready! 🎉🎉🎉")
-            print(f"🌍 Public URL: {ngrok_tunnel.public_url}")
-            print("===================================================================")
-            print("\n" * 2)
-
-    except Exception as e:
-        print("\n" * 2)
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print(f"❌ CRITICAL NGROK ERROR: Ngrok initialization failed!")
-        print(f"Error Type: {type(e).__name__}")
-        print(f"Error Details: {e}")
-        print("Please check your NGROK_AUTHTOKEN in the .env file and your internet connection.")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("\n" * 2)
-    
-    yield
-    
-    print(" shutting down...")
-    if ngrok_tunnel:
-        ngrok.disconnect(ngrok_tunnel.public_url)
-        print("Ngrok tunnel disconnected.")
-
 # --- FastAPI App & Routes (V9) ---
-app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="10.0.0", lifespan=lifespan)
-allowed_origin = os.getenv("VERCEL_URL", "http://localhost:3000") # Default for local dev
-origins = [
-    "http://localhost",
-    "http://localhost:8080",
+app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="10.0.0")
+#allowed_origin = os.getenv("VERCEL_URL", "http://localhost:3000") # Default for local dev
+#origins = [
+    #"http://localhost",
+    #"http://localhost:8080",
     # This is your main production URL
-    "https://sarawak-sar-risk-explorer.vercel.app", 
+    #"https://sarawak-sar-risk-explorer.vercel.app/", 
     # This is the specific Git branch deployment URL, also good to include
-    "https://sarawak-sar-risk-explorer-git-main-chiu-siew-sengs-projects.vercel.app"
-]
+    #"https://sarawak-sar-risk-explorer-git-main-chiu-siew-sengs-projects.vercel.app/"
+#]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow requests from ANY origin
+    allow_origins=["*"], # Allow ANY origin
     allow_credentials=True,
-    allow_methods=["*"], # Allow all methods (GET, POST, etc.)
+    allow_methods=["*"], # Allow all methods
     allow_headers=["*"], # Allow all headers
 )
 
