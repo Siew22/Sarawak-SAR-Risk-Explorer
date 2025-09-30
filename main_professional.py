@@ -192,6 +192,7 @@ def read_root():
 async def submit_analysis(request: OnClickAnalysisRequest, background_tasks: BackgroundTasks):
     task_id = str(uuid.uuid4())
     TASKS[task_id] = {"task_id": task_id, "status": "PENDING", "submitted_at": time.time(), "request_data": request.dict(), "result": None, "completed_at": None}
+    # Assuming run_on_click_analysis_task is defined above
     background_tasks.add_task(run_on_click_analysis_task, task_id, request)
     return {"message": "Smart analysis task submitted successfully.", "task_id": task_id, "status_endpoint": f"/api/v9/tasks/{task_id}"}
 
