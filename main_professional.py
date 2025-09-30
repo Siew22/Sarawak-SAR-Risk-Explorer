@@ -216,7 +216,7 @@ async def lifespan(app: FastAPI):
         print("Ngrok tunnel disconnected.")
 
 # --- FastAPI App & Routes (V9) ---
-app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="10.0.0")
+app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="10.0.0", lifespan=lifespan)
 allowed_origin = os.getenv("VERCEL_URL", "http://localhost:3000") # Default for local dev
 origins = [
     "http://localhost",
