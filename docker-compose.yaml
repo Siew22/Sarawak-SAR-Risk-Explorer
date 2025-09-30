@@ -1,29 +1,25 @@
-# The 'version' tag is obsolete in recent Docker Compose versions.
 services:
   backend-app:
     build: .
     container_name: sar-backend-app-service
     restart: always
     volumes:
-      # [Final Fix] Use standard Docker Compose syntax for environment variables on Windows.
-      # This is the most robust and cross-platform compatible way.
       - "${USERPROFILE}/.config/earthengine:/root/.config/earthengine"
     environment:
-      # This will read the VERCEL_URL from the .env file
       - VERCEL_URL=${VERCEL_URL}
-    # We don't expose ports here, as ngrok will connect to the internal Docker network.
+    expose: # Use expose for internal networking
+      - "8000"
 
   ngrok:
     image: ngrok/ngrok:latest
     container_name: sar-ngrok-service
     restart: always
     ports:
-      - "4040:4040" # Exposes the ngrok web interface for debugging on http://localhost:4040
+      - "4040:4040"
     depends_on:
       - backend-app
     environment:
-      # These will read the secrets from the .env file
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-    # The command now uses the service name 'backend-app' as the hostname,
-    # which is automatically resolved by Docker's internal DNS.
+    # [Final Fix] Use the service name 'backend-app' as the hostname.
+    # This is the most robust way for containers to talk to each other.
     command: http backend-app:8000 --domain ${NGROK_STATIC_DOMAIN}
