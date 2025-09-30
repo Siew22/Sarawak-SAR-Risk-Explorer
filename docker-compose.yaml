@@ -1,16 +1,13 @@
 services:
   backend-app:
     build: .
-    container_name: sar-backend-ultimate
+    container_name: sar-backend-ultimate-host
     restart: always
-    ports:
-      - "8000:8000"
-      - "4040:4040"
+    # [V15 Ultimate Fix] Use the host's network directly.
+    # This is the most robust solution for pyngrok on Docker for Windows.
+    network_mode: "host"
     volumes:
       - "${USERPROFILE}/.config/earthengine:/root/.config/earthengine"
     environment:
+      # This will read your NGROK_AUTHTOKEN from the .env file
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-    # [V15 Final Fix] Explicitly set a public DNS server for the container.
-    # This bypasses any potential DNS resolution issues within the Docker network.
-    dns:
-      - 8.8.8.8

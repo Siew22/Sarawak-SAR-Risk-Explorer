@@ -216,7 +216,7 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
         TASKS[task_id]['completed_at'] = time.time()
 
 # --- FastAPI App & Routes (V9) ---
-app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="10.0.0")
+app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="10.0.0", lifespan=lifespan)
 #allowed_origin = os.getenv("VERCEL_URL", "http://localhost:3000") # Default for local dev
 #origins = [
     #"http://localhost",
