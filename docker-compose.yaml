@@ -1,8 +1,11 @@
 services:
   backend-app:
     build: .
-    container_name: throughtheradarlookingglassrevealingearthprocesseswithsar-backend-app:latest
+    container_name: sar-backend-app-service
     restart: always
+    # [Final Fix] Add the ports mapping to expose the service to the host machine.
+    ports:
+      - "8000:8000"
     volumes:
       - "${USERPROFILE}/.config/earthengine:/root/.config/earthengine"
     expose:
@@ -10,15 +13,12 @@ services:
 
   ngrok:
     image: ngrok/ngrok:latest
-    container_name: throughtheradarlookingglassrevealingearthprocesseswithsar-backend-app:latest
+    container_name: sar-ngrok-service
     restart: always
     ports:
       - "4040:4040"
     depends_on:
       - backend-app
     environment:
-      # This will read your authtoken from the .env file
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-    # [V13 Final Fix] We use the simplest command and add the CORS header.
-    # This combination is proven to work on the free plan.
     command: 'http backend-app:8000 --response-header-add "Access-Control-Allow-Origin: *"'
