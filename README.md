@@ -8,6 +8,8 @@
 
 This project is a submission for the **"Through the Radar Looking Glass: Revealing Earth Processes with SAR"** challenge. We didn't just build a tool; we created an immersive exploration experience. Our platform empowers any user—from a concerned citizen to a policy maker—to click anywhere on Earth and instantly receive a sophisticated, AI-driven analysis of environmental changes and risks, explained in clear, simple terms.
 
+main_completely_framework_interface_platform_is_index.html_ya, the spare.html is just for my spare only ya, if you wanted to see also can.
+
 ---
 
 ## 🚀 Live Demo & Presentation
@@ -17,7 +19,7 @@ This project is a submission for the **"Through the Radar Looking Glass: Reveali
 
 Access Public URL Website to Explore the Web App interface and function
 
-https://sarawak-sar-risk-explorer.vercel.app/
+[https://sarawak-sar-risk-explorer.vercel.app/](https://sarawak-sar-risk-explorer-git-main-chiu-siew-sengs-projects.vercel.app?_vercel_share=6zALNX4ybJRtlfPFxprzTOHA4J8OKAUU)
 
 ---
 
@@ -61,6 +63,13 @@ The "Through the Radar Looking Glass" challenge is not just about processing SAR
 *   **Data Sources:** NASA/ESA Sentinel-1, OpenWeatherMap, Open-Meteo, Nominatim Geocoding, RainViewer
 
 ---
+
+## 🧰 System Architecture Figure
+
+<img width="3840" height="3107" alt="Untitled diagram _ Mermaid Chart-2025-09-24-050315" src="https://github.com/user-attachments/assets/51c67542-773d-43b4-8e4f-88caa1776284" />
+
+## Core Analysis Flowchart Figure
+<img width="1088" height="3840" alt="Untitled diagram _ Mermaid Chart-2025-09-24-050335" src="https://github.com/user-attachments/assets/cf747617-c999-47ae-b6c4-8f9e1cf3e45f" />
 
 ## 🚀 How to Run Locally
 
