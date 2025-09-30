@@ -3,23 +3,9 @@ services:
     build: .
     container_name: sar-backend-app-service
     restart: always
+    ports:
+      - "8000:8000" # Expose port 8000 to the host machine
     volumes:
       - "${USERPROFILE}/.config/earthengine:/root/.config/earthengine"
     environment:
       - VERCEL_URL=${VERCEL_URL}
-    expose: # Use expose for internal networking
-      - "8000"
-
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: sar-ngrok-service
-    restart: always
-    ports:
-      - "4040:4040"
-    depends_on:
-      - backend-app
-    environment:
-      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-    # [Final Fix] Use the service name 'backend-app' as the hostname.
-    # This is the most robust way for containers to talk to each other.
-    command: http backend-app:8000 --domain ${NGROK_STATIC_DOMAIN}
