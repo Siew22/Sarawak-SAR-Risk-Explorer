@@ -171,9 +171,10 @@ allowed_origin = os.getenv("VERCEL_URL", "http://localhost:3000") # Default for 
 origins = [
     "http://localhost",
     "http://localhost:8080",
-    # PASTE YOUR VERCEL URL HERE, EXACTLY AS IT APPEARS IN THE ERROR MESSAGE
+    # This is your main production URL
     "https://sarawak-sar-risk-explorer.vercel.app", 
-    "https://sarawak-sar-risk-explorer-git-main-chiu-siew-sengs-projects.vercel.app" # Add the specific deployment URL too
+    # This is the specific Git branch deployment URL, also good to include
+    "https://sarawak-sar-risk-explorer-git-main-chiu-siew-sengs-projects.vercel.app"
 ]
 
 app.add_middleware(
