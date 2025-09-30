@@ -19,7 +19,7 @@ main_completely_framework_interface_platform_is_index.html_ya, the spare.html is
 
 Access Public URL Website to Explore the Web App interface and function
 
-[[https://sarawak-sar-risk-explorer.vercel.app/](https://sarawak-sar-risk-explorer-git-main-chiu-siew-sengs-projects.vercel.app?_vercel_share=6zALNX4ybJRtlfPFxprzTOHA4J8OKAUU)](https://sarawak-sar-risk-explorer.vercel.app/)
+https://sarawak-sar-risk-explorer.vercel.app/
 
 ---
 
