@@ -9,10 +9,60 @@ import uuid
 import time
 import requests
 import ee
+from pyngrok import ngrok, conf
+from contextlib import asynccontextmanager
 
 
 # Ensure 'gee_functions_professional.py' (the ultimate dual-core version) is in the same directory.
 import gee_functions_professional as gee_pro
+
+# [V14.2 Final Fix] Add extensive logging and fail-safe checks to the lifespan event
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("===================================================================")
+    print("🚀 APPLICATION STARTUP SEQUENCE INITIATED...")
+    print("===================================================================")
+    
+    ngrok_tunnel = None
+    try:
+        ngrok_authtoken = os.getenv("NGROK_AUTHTOKEN")
+        
+        if not ngrok_authtoken:
+            print("❌ FATAL: NGROK_AUTHTOKEN environment variable not found or is empty.")
+            print("Tunnel will not be started. The application will only be available inside the Docker network.")
+        else:
+            print(f"🔑 Found NGROK_AUTHTOKEN, attempting to set...")
+            ngrok.set_auth_token(ngrok_authtoken)
+            print("✅ Ngrok authtoken set successfully.")
+            
+            print("🚇 Attempting to connect to ngrok service...")
+            # Use a slightly more robust connection method
+            conf.get_default().region = 'ap' # Specify Asia/Pacific region
+            ngrok_tunnel = ngrok.connect(8000, "http")
+            
+            print("\n" * 2)
+            print("===================================================================")
+            print(f"🎉🎉🎉 Ngrok Tunnel is LIVE and ready! 🎉🎉🎉")
+            print(f"🌍 Public URL: {ngrok_tunnel.public_url}")
+            print("===================================================================")
+            print("\n" * 2)
+
+    except Exception as e:
+        print("\n" * 2)
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(f"❌ CRITICAL NGROK ERROR: Ngrok initialization failed!")
+        print(f"Error Type: {type(e).__name__}")
+        print(f"Error Details: {e}")
+        print("Please check your NGROK_AUTHTOKEN in the .env file and your internet connection.")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("\n" * 2)
+    
+    yield
+    
+    print(" shutting down...")
+    if ngrok_tunnel:
+        ngrok.disconnect(ngrok_tunnel.public_url)
+        print("Ngrok tunnel disconnected.")
 
 # --- [V9] Final API Models - Simplified for better UX ---
 class OnClickAnalysisRequest(BaseModel):

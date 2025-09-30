@@ -4,10 +4,13 @@ services:
     container_name: sar-backend-ultimate
     restart: always
     ports:
-      - "8000:8000" # We expose the port for local testing
-      - "4040:4040" # We expose the ngrok UI
+      - "8000:8000"
+      - "4040:4040"
     volumes:
       - "${USERPROFILE}/.config/earthengine:/root/.config/earthengine"
     environment:
-      # This will read your NGROK_AUTHTOKEN from the .env file
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    # [V15 Final Fix] Explicitly set a public DNS server for the container.
+    # This bypasses any potential DNS resolution issues within the Docker network.
+    dns:
+      - 8.8.8.8
