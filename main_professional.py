@@ -4,24 +4,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
-import os
 import uuid
 import time
 import requests
 import ee
-from pyngrok import ngrok, conf
-from contextlib import asynccontextmanager
-
 
 # Ensure 'gee_functions_professional.py' (the ultimate dual-core version) is in the same directory.
 import gee_functions_professional as gee_pro
 
-# --- [V9] Final API Models - Simplified for better UX ---
+# --- API Models ---
 class OnClickAnalysisRequest(BaseModel):
     lat: float = Field(..., example=1.557)
     lon: float = Field(..., example=110.35)
     analysis_type: str = Field(..., example="flood", description="Type of analysis: 'flood' or 'deforestation'")
-    buffer_degree: Optional[float] = Field(0.1)
+    buffer_degree: Optional[float] = Field(0.1, description="Radius in degrees to create the analysis area.")
 
 class AnalysisTask(BaseModel):
     task_id: str
@@ -58,12 +54,14 @@ def get_weather_forecast(lat: float, lon: float) -> Dict[str, Any]:
 def generate_risk_assessment_hypothesis(historical_analysis: Dict, forecast_data: Dict) -> Dict:
     risk_level, confidence, primary_cause = "Low", "Medium", "No significant threats identified."
     historical_flood_area = historical_analysis.get("area_sq_km", 0)
+    
     if not forecast_data.get("success"):
         risk_level, primary_cause = "Indeterminate", "Could not retrieve weather forecast data."
     else:
         daily_forecast = forecast_data["data"]["daily"]
         precip_3_days = sum(daily_forecast.get("precipitation_sum", [0])[:3])
         prob_3_days = max(daily_forecast.get("precipitation_probability_max", [0])[:3])
+        
         if historical_flood_area > 1.0 and precip_3_days > 50 and prob_3_days > 70:
             risk_level, confidence, primary_cause = "High", "High", f"Area is historically vulnerable (recent flood of {historical_flood_area:.2f} sq km). Forecast predicts significant rainfall ({precip_3_days:.1f} mm over 3 days) with high probability ({prob_3_days}%)."
         elif precip_3_days > 80 and prob_3_days > 75:
@@ -72,6 +70,7 @@ def generate_risk_assessment_hypothesis(historical_analysis: Dict, forecast_data
             risk_level, confidence, primary_cause = "Medium", "Medium", "Area is historically vulnerable. While the forecast rainfall is moderate, it may be sufficient to trigger localized flooding."
         else:
             primary_cause = f"No significant recent flooding detected and forecast rainfall is low ({precip_3_days:.1f} mm over 3 days)."
+            
     return {"risk_level": risk_level, "confidence": confidence, "summary": f"The flood risk for the next 3-5 days is assessed as **{risk_level}**.", "evidence": {"historical_vulnerability": f"Analysis of the past 90 days shows a maximum flood extent of {historical_flood_area:.2f} sq km.", "future_threat": primary_cause}}
 
 def generate_deforestation_hypothesis(gee_result, geometry, period1_str, period2_str):
@@ -90,7 +89,7 @@ def generate_deforestation_hypothesis(gee_result, geometry, period1_str, period2
     }
     return {"story": story, "area_sq_km": round(deforestation_area_km2, 2)}
 
-# --- [V9] Ultimate Background Task Runner with Smart "Then vs Now" Logic ---
+# --- Ultimate Background Task Runner with Smart "Then vs Now" Logic ---
 def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
     TASKS[task_id]['status'] = "RUNNING"
     try:
@@ -167,95 +166,9 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
         TASKS[task_id]['result'] = {"error": f"Backend task failed: {type(e).__name__} - {str(e)}"}
         TASKS[task_id]['completed_at'] = time.time()
 
-# [V15.1 Final Fix] Create a separate function for the ngrok tunnel startup
-def start_ngrok_tunnel():
-    """Waits a moment and then starts the ngrok tunnel."""
-    import time
-    time.sleep(2) # Wait 2 seconds for Uvicorn to be ready
-    
-    print("===================================================================")
-    print("🚀 NGROK TUNNEL STARTUP SEQUENCE INITIATED...")
-    print("===================================================================")
-    
-    try:
-        ngrok_authtoken = os.getenv("NGROK_AUTHTOKEN")
-        if not ngrok_authtoken:
-            print("❌ FATAL: NGROK_AUTHTOKEN environment variable not found.")
-        else:
-            ngrok.set_auth_token(ngrok_authtoken)
-            conf.get_default().region = 'ap' # Asia/Pacific
-            
-            # Connect to the Uvicorn server running on localhost inside the container
-            public_url = ngrok.connect("http://127.0.0.1:8000") # Use explicit localhost
-            
-            print("\n" * 2)
-            print("===================================================================")
-            print(f"🎉🎉🎉 Ngrok Tunnel is LIVE and ready! 🎉🎉🎉")
-            print(f"🌍 Public URL: {public_url}")
-            print("===================================================================")
-            print("\n" * 2)
-
-    except Exception as e:
-        print("\n" * 2)
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print(f"❌ CRITICAL NGROK ERROR: {e}")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("\n" * 2)
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # This code runs on startup, but we do nothing here now
-    yield
-    # This code runs on shutdown
-    print(" shutting down...")
-    try:
-        ngrok.disconnect()
-        print("Ngrok tunnel disconnected.")
-    except Exception as e:
-        print(f"Error disconnecting ngrok: {e}")
-
-# --- FastAPI App Initialization with Lifespan Event ---
-app = FastAPI(title="Ultimate Self-Tunneling SAR API", version="15.1.0", lifespan=lifespan)
-
-# --- CORS Middleware ---
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# [V15.1 Final Fix] Add a startup route to trigger the ngrok tunnel
-@app.on_event("startup")
-def on_startup():
-    """
-    On application startup, run the ngrok tunnel function in the background.
-    """
-    background_tasks = BackgroundTasks()
-    background_tasks.add_task(start_ngrok_tunnel)
-    # This is a bit of a hack to run background tasks on startup
-    # We will call this dummy endpoint once to trigger it
-    import asyncio
-    async def trigger_startup_task():
-        await asyncio.sleep(0.1) # ensure server is ready
-        # In a real-world scenario, you might have a different trigger, 
-        # but for this setup, this is a robust way to ensure it runs.
-        # Here we just add the task and it will be picked up.
-        # This part is complex, let's simplify. We will use a simple startup event.
-        
-    # The simplest way is to just call it.
-    # But to avoid blocking, we use a background task on the first request.
-    # Let's use a simpler, more direct startup event.
-
-# Let's use the simpler @app.on_event("startup")
-@app.on_event("startup")
-async def app_startup():
-    # Run the ngrok starter in a separate thread to not block the main app
-    import threading
-    thread = threading.Thread(target=start_ngrok_tunnel)
-    thread.daemon = True
-    thread.start()
+# --- FastAPI App & Routes (V9) ---
+app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="9.0.0")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 @app.get("/", tags=["General"])
 def read_root():
