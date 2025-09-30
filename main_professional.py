@@ -172,9 +172,9 @@ origins = [
     "http://localhost",
     "http://localhost:8080",
     # This is your main production URL
-    "https://sarawak-sar-risk-explorer.vercel.app", 
+    "https://sarawak-sar-risk-explorer.vercel.app/", 
     # This is the specific Git branch deployment URL, also good to include
-    "https://sarawak-sar-risk-explorer-git-main-chiu-siew-sengs-projects.vercel.app"
+    "https://sarawak-sar-risk-explorer-git-main-chiu-siew-sengs-projects.vercel.app/"
 ]
 
 app.add_middleware(
