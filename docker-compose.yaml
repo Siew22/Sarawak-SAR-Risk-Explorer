@@ -5,7 +5,7 @@ services:
     restart: always
     # [Final Fix] Add the ports mapping to expose the service to the host machine.
     ports:
-      - "0.0.1:8000"
+      - "8000"
     volumes:
       - "${USERPROFILE}/.config/earthengine:/root/.config/earthengine"
     expose:
