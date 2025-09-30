@@ -9,6 +9,7 @@ import uuid
 import time
 import requests
 import ee
+from pyngrok import ngrok, conf # [V14] Import pyngrok
 
 
 # Ensure 'gee_functions_professional.py' (the ultimate dual-core version) is in the same directory.
@@ -164,6 +165,20 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
         TASKS[task_id]['status'] = "FAILED"
         TASKS[task_id]['result'] = {"error": f"Backend task failed: {type(e).__name__} - {str(e)}"}
         TASKS[task_id]['completed_at'] = time.time()
+
+# [V14] Configure and start the ngrok tunnel from within Python
+try:
+    ngrok_authtoken = os.getenv("NGROK_AUTHTOKEN")
+    if ngrok_authtoken:
+        ngrok.set_auth_token(ngrok_authtoken)
+        # Create a tunnel to the port our app will run on
+        public_url = ngrok.connect(8000, "http")
+        print(f"✅ Ngrok tunnel is LIVE at: {public_url}")
+        # This public_url is now our backend's address
+    else:
+        print("⚠️ NGROK_AUTHTOKEN not found. Tunnel not started.")
+except Exception as e:
+    print(f"❌ Ngrok initialization failed: {e}")
 
 # --- FastAPI App & Routes (V9) ---
 app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="10.0.0")

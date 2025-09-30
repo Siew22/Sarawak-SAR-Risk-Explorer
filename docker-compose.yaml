@@ -1,28 +1,13 @@
 services:
   backend-app:
     build: .
-    container_name: sar-backend-app-service
+    container_name: sar-backend-ultimate
     restart: always
     ports:
-      - "8000:8000"
+      - "8000:8000" # We expose the port for local testing
+      - "4040:4040" # We expose the ngrok UI
     volumes:
       - "${USERPROFILE}/.config/earthengine:/root/.config/earthengine"
-    # No ports are exposed to the host machine, ngrok will connect internally
-    expose:
-      - "8000"
-
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: sar-ngrok-service
-    restart: always
-    ports:
-      - "4040:4040" # For the web interface at http://localhost:4040
-    depends_on:
-      - backend-app
     environment:
-      # This will read your authtoken from the .env file
+      # This will read your NGROK_AUTHTOKEN from the .env file
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-    # [V13 Final Fix] Use the simplest possible command.
-    # This just creates a tunnel to the backend service. All other logic
-    # will be handled by our FastAPI backend.
-    command: http backend-app:8000
