@@ -167,30 +167,53 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
         TASKS[task_id]['result'] = {"error": f"Backend task failed: {type(e).__name__} - {str(e)}"}
         TASKS[task_id]['completed_at'] = time.time()
 
-# --- [V14.1 Final Fix] Use FastAPI's modern lifespan event for startup logic ---
+# [V14.2 Final Fix] Add extensive logging and fail-safe checks to the lifespan event
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # This code runs on startup
-    print("🚀 Application startup...")
+    print("===================================================================")
+    print("🚀 APPLICATION STARTUP SEQUENCE INITIATED...")
+    print("===================================================================")
+    
+    ngrok_tunnel = None
     try:
         ngrok_authtoken = os.getenv("NGROK_AUTHTOKEN")
-        if ngrok_authtoken:
-            ngrok.set_auth_token(ngrok_authtoken)
-            public_url = ngrok.connect(8000, "http")
-            print("===================================================================")
-            print(f"✅ Ngrok tunnel is LIVE at: {public_url}")
-            print("===================================================================")
+        
+        if not ngrok_authtoken:
+            print("❌ FATAL: NGROK_AUTHTOKEN environment variable not found or is empty.")
+            print("Tunnel will not be started. The application will only be available inside the Docker network.")
         else:
-            print("⚠️ NGROK_AUTHTOKEN environment variable not found. Tunnel not started.")
+            print(f"🔑 Found NGROK_AUTHTOKEN, attempting to set...")
+            ngrok.set_auth_token(ngrok_authtoken)
+            print("✅ Ngrok authtoken set successfully.")
+            
+            print("🚇 Attempting to connect to ngrok service...")
+            # Use a slightly more robust connection method
+            conf.get_default().region = 'ap' # Specify Asia/Pacific region
+            ngrok_tunnel = ngrok.connect(8000, "http")
+            
+            print("\n" * 2)
+            print("===================================================================")
+            print(f"🎉🎉🎉 Ngrok Tunnel is LIVE and ready! 🎉🎉🎉")
+            print(f"🌍 Public URL: {ngrok_tunnel.public_url}")
+            print("===================================================================")
+            print("\n" * 2)
+
     except Exception as e:
-        print(f"❌ Ngrok initialization failed: {e}")
+        print("\n" * 2)
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(f"❌ CRITICAL NGROK ERROR: Ngrok initialization failed!")
+        print(f"Error Type: {type(e).__name__}")
+        print(f"Error Details: {e}")
+        print("Please check your NGROK_AUTHTOKEN in the .env file and your internet connection.")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("\n" * 2)
     
     yield
     
-    # This code runs on shutdown
     print(" shutting down...")
-    ngrok.disconnect()
-    print("Ngrok tunnel disconnected.")
+    if ngrok_tunnel:
+        ngrok.disconnect(ngrok_tunnel.public_url)
+        print("Ngrok tunnel disconnected.")
 
 # --- FastAPI App & Routes (V9) ---
 app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="10.0.0")
