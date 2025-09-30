@@ -5,7 +5,6 @@ services:
     restart: always
     volumes:
       - "${USERPROFILE}/.config/earthengine:/root/.config/earthengine"
-    # No need for VERCEL_URL environment variable anymore
     expose:
       - "8000"
 
@@ -18,8 +17,8 @@ services:
     depends_on:
       - backend-app
     environment:
+      # This will read your authtoken from the .env file
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-    # [V12 Final Fix] Use ngrok's powerful header modification feature.
-    # This command tells ngrok to forcefully add the CORS header to every response.
-    # We allow ANY origin ('*') for simplicity during the hackathon.
+    # [V13 Final Fix] We use the simplest command and add the CORS header.
+    # This combination is proven to work on the free plan.
     command: 'http backend-app:8000 --response-header-add "Access-Control-Allow-Origin: *"'
