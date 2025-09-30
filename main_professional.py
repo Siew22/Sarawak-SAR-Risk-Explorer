@@ -4,10 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+import os
 import uuid
 import time
 import requests
 import ee
+
 
 # Ensure 'gee_functions_professional.py' (the ultimate dual-core version) is in the same directory.
 import gee_functions_professional as gee_pro
@@ -164,8 +166,21 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
         TASKS[task_id]['completed_at'] = time.time()
 
 # --- FastAPI App & Routes (V9) ---
-app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="9.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="10.0.0")
+allowed_origin = os.getenv("VERCEL_URL", "http://localhost:3000") # Default for local dev
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+    allowed_origin,
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/", tags=["General"])
 def read_root():
