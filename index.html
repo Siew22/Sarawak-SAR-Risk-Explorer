@@ -68,8 +68,9 @@
 
 <script>
     // --- Configuration ---
-    const API_BASE_URL = 'https://5dbf8da8ab56.ngrok-free.app/';
-    const OWM_API_KEY = '5f66e14d6562958e2f9fb986b4fc8bdf'; 
+    let API_BASE_URL = ''; 
+    // [IMPORTANT!] Paste your free API Key from OpenWeatherMap here.
+    const OWM_API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY';
 
     // --- Global State ---
     let map, baseLayer, activeLayers = {}, clickMarker = null, fullForecastData = null, temperatureLayerGroup = null;
@@ -78,36 +79,62 @@
     let statusOverlay, resultPanel, forecastPanel, layerPanel, searchInput, searchButton, radarTimelinePanel;
 
     // --- Main Initialization ---
-    function initializeApp() {
-        map = L.map('map', { zoomControl: false }).setView([4.21, 101.97], 6);
-        L.control.zoom({ position: 'topright' }).addTo(map);
-        baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-        }).addTo(map);
-        temperatureLayerGroup = L.layerGroup().addTo(map);
+    async function initializeApp() {
+    // Initialize Map and UI Elements first
+    map = L.map('map', { zoomControl: false }).setView([4.21, 101.97], 6);
+    L.control.zoom({ position: 'topright' }).addTo(map);
+    baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    }).addTo(map);
+    temperatureLayerGroup = L.layerGroup().addTo(map);
+    
+    statusOverlay = document.getElementById('status-overlay');
+    resultPanel = document.getElementById('result-panel');
+    forecastPanel = document.getElementById('forecast-panel');
+    layerPanel = document.getElementById('layer-panel');
+    searchInput = document.getElementById('search-input');
+    searchButton = document.getElementById('search-button');
+    const switchFloodBtn = document.getElementById('switch-flood');
+    const switchDeforestationBtn = document.getElementById('switch-deforestation');
+    
+    // [V12 Core Logic] Fetch the backend URL from our Vercel "env" endpoint
+    try {
+        // This request goes to /api/env relative to the Vercel domain
+        const response = await fetch('/api/env'); 
+        if (!response.ok) throw new Error('Could not fetch environment configuration from Vercel.');
+        const env = await response.json();
+        
+        if (!env.API_BASE_URL) throw new Error('API_BASE_URL is not set in Vercel environment.');
+        
+        API_BASE_URL = env.API_BASE_URL;
+        console.log("Backend URL loaded successfully:", API_BASE_URL);
 
-        statusOverlay = document.getElementById('status-overlay');
-        resultPanel = document.getElementById('result-panel');
-        forecastPanel = document.getElementById('forecast-panel');
-        layerPanel = document.getElementById('layer-panel');
-        searchInput = document.getElementById('search-input');
-        searchButton = document.getElementById('search-button');
-        radarTimelinePanel = document.getElementById('radar-timeline-panel');
-        const switchFloodBtn = document.getElementById('switch-flood');
-        const switchDeforestationBtn = document.getElementById('switch-deforestation');
-
-        map.on('moveend', updateLiveTemperatures);
-        map.on('zoomend', updateLiveTemperatures);
-        map.on("click", handleMapClick);
-        searchButton.addEventListener("click", searchLocation);
-        searchInput.addEventListener("keydown", e => { if (e.key === "Enter") searchLocation(); });
-        document.addEventListener("keydown", handleEscKey);
-        switchFloodBtn.addEventListener('click', () => switchMode('flood'));
-        switchDeforestationBtn.addEventListener('click', () => switchMode('deforestation'));
-
-        initializeLayerPanel();
-        updateLiveTemperatures();
+    } catch (error) {
+        console.error("CRITICAL ERROR: Could not load backend URL.", error);
+        // Display a permanent, fatal error message to the user
+        const controlPanel = document.getElementById('control-panel');
+        if (controlPanel) {
+            controlPanel.innerHTML = `<div style="color: #dc3545; text-align: center; padding: 20px;">
+                <h4><i class="fa-solid fa-server"></i> Connection Failed</h4>
+                <p>Could not connect to the backend analysis engine. The service may be temporarily offline. Please try again later.</p>
+            </div>`;
+        }
+        return; // Stop the app from initializing further
     }
+    
+    // --- If URL is loaded successfully, proceed with other initializations ---
+    map.on('moveend', updateLiveTemperatures);
+    map.on('zoomend', updateLiveTemperatures);
+    map.on("click", handleMapClick);
+    searchButton.addEventListener("click", searchLocation);
+    searchInput.addEventListener("keydown", e => { if (e.key === "Enter") searchLocation(); });
+    document.addEventListener("keydown", handleEscKey);
+    switchFloodBtn.addEventListener('click', () => switchMode('flood'));
+    switchDeforestationBtn.addEventListener('click', () => switchMode('deforestation'));
+
+    initializeLayerPanel();
+    updateLiveTemperatures();
+}
 
     // --- UI/UX Functions ---
     function initializeLayerPanel() {
