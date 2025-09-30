@@ -37,6 +37,13 @@
 </head>
 <body>
 
+    <!-- HTML 结构中新增了 API 配置面板 -->
+<div id="api-config-panel" class="floating-panel">
+    <label for="api-input"><i class="fa-solid fa-server"></i> Backend URL:</label>
+    <input type="text" id="api-input" placeholder="Paste your ngrok URL here and press Enter">
+    <div id="api-status" title="Connection Status: Disconnected"></div>
+</div>
+
 <div id="map"></div>
 <div id="control-panel" class="floating-panel">
     <h4><i class="fa-solid fa-satellite"></i> Analysis Mode</h4>
