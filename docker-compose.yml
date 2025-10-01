@@ -1,0 +1,24 @@
+﻿# 'version' attribute is removed.
+services:
+  app:
+    build: .
+    container_name: sar_backend_app
+    volumes:
+      - 'C:\Users\User\.config\earthengine:/root/.config/earthengine' # Hard-coded path
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: sar_ngrok_tunnel
+    ports:
+      - "4040:4040"
+    depends_on:
+      - app
+    env_file:
+      - .env
+    # [Ultimate Final Fix] Use the correct, modern ngrok syntax for adding CORS headers.
+    command:
+      - "http"
+      - "app:8000"
+      - "--basic-auth=nasa:spaceapps2025"
+      - "--log=stdout"
+      - "--response-header-add=Access-Control-Allow-Origin:*"
