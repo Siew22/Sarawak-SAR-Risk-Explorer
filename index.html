@@ -306,7 +306,51 @@
         function getWeatherIconClass(e){return e>=200&&e<300?"fa-solid fa-cloud-bolt":e>=300&&e<600?"fa-solid fa-cloud-rain":e>=600&&e<700?"fa-solid fa-snowflake":800===e?"fa-solid fa-sun":801===e||802===e?"fa-solid fa-cloud-sun":803===e||804===e?"fa-solid fa-cloud":"fa-solid fa-smog"}
         function populateForecastPanel(e){if(!e||!e.success)return;fullForecastData=e.data;const t=document.getElementById("daily-forecast-container");t.innerHTML="",fullForecastData.daily.time.forEach((e,a)=>{const l=document.createElement("div");l.className="day-forecast",l.dataset.dayIndex=a;const s=(new Date(e)).toLocaleDateString("en-US",{weekday:"short"});l.innerHTML=`\n                <div class="day-name">${0===a?"Today":s}</div>\n                <i class="weather-icon ${getWeatherIconClass(fullForecastData.daily.weathercode[a])}"></i>\n                <div class="temp-range">${Math.round(fullForecastData.daily.temperature_2m_max[a])}°/${Math.round(fullForecastData.daily.temperature_2m_min[a])}°</div>\n            `,l.addEventListener("click",()=>{document.querySelectorAll(".day-forecast").forEach(e=>e.classList.remove("active")),l.classList.add("active"),showHourlyForecast(a)}),t.appendChild(l)}),t.firstChild&&t.firstChild.click()}
         function showHourlyForecast(e){const t=document.getElementById("hourly-forecast-container");if(!fullForecastData.hourly)return t.innerHTML='<p style="text-align:center;width:100%;">Hourly data not available.</p>',void t.classList.add("visible");t.innerHTML="";const a=24*e,l=a+24,s=fullForecastData.hourly.time.slice(a,l),o=fullForecastData.hourly.temperature_2m.slice(a,l);s.forEach((e,r)=>{const n=document.createElement("div");n.className="hour-forecast";const i=(new Date(e)).getHours();n.innerHTML=`\n                <div class="hour-time">${i}:00</div>\n                <i class="weather-icon ${getWeatherIconClass(fullForecastData.hourly.weathercode[a+r])}"></i>\n                <div class="hour-temp">${Math.round(o[r])}°</div>\n            `,t.appendChild(n)}),t.classList.add("visible")}
-        async function triggerAnalysis(e,t,a){showStatus(`Analyzing for ${a}...`);try{const l={lat:e,lon:t,buffer_degree:.1,analysis_type:currentAnalysisMode},s=await fetch(`${API_BASE_URL}/api/v9/analyze`,{method:"POST",headers:{"Content-Type":"application/json","ngrok-skip-browser-warning":"true"},body:JSON.stringify(l)});if(!s.ok)throw new Error(`API submit failed with status ${s.status}`);const o=await s.json(),r=`${API_BASE_URL}${o.status_endpoint}`,n=async e=>{const t=await fetch(e),a=await t.json();return"COMPLETED"===a.status||"FAILED"===a.status?a:(await new Promise(resolve=>setTimeout(resolve,3e3)),n(e))},i=await n(r);hideStatus(),"COMPLETED"===i.status?(i.request_data.locationName=a,displayResults(i)):(()=>{throw new Error(i.result.error)})()}catch(e){hideStatus(),resultPanel.innerHTML=`<div class="location-title">${a}</div><div class="evidence-details"><p><strong>Error:</strong> ${e.message}</p></div>`,resultPanel.classList.add("visible")}}
+        async function triggerAnalysis(e, t, a) {
+    showStatus(`Analyzing for ${a}...`);
+    try {
+        const l = {
+            lat: e,
+            lon: t,
+            buffer_degree: .1,
+            analysis_type: currentAnalysisMode
+        };
+        // 第一次 fetch，已经包含了 header
+        const s = await fetch(`${API_BASE_URL}/api/v9/analyze`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "true" 
+            },
+            body: JSON.stringify(l)
+        });
+
+        if (!s.ok) throw new Error(`API submit failed with status ${s.status}`);
+        
+        const o = await s.json();
+        const r = `${API_BASE_URL}${o.status_endpoint}`;
+
+        const n = async e => {
+            // 第二次 fetch，在这里也加上 header
+            const t = await fetch(e, { headers: { "ngrok-skip-browser-warning": "true" } });
+            const a = await t.json();
+            return "COMPLETED" === a.status || "FAILED" === a.status ? a : (await new Promise(resolve => setTimeout(resolve, 3e3)), n(e))
+        };
+        const i = await n(r);
+        
+        hideStatus();
+        if ("COMPLETED" === i.status) {
+            i.request_data.locationName = a;
+            displayResults(i);
+        } else {
+            throw new Error(i.result.error || "Analysis task failed without a specific error message.");
+        }
+    } catch (e) {
+        hideStatus();
+        resultPanel.innerHTML = `<div class="location-title">${a}</div><div class="evidence-details"><p><strong>Error:</strong> ${e.message}</p></div>`;
+        resultPanel.classList.add("visible");
+    }
+}
         async function handleMapClick(e){const{lat:t,lng:a}=e.latlng;clickMarker&&map.removeLayer(clickMarker),clickMarker=L.marker([t,a]).addTo(map);try{const l=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${t}&lon=${a}&accept-language=en`);if(!l.ok)throw new Error("Reverse geocoding service unavailable.");const s=await l.json(),o=s.display_name||"Unknown Location";triggerAnalysis(t,a,o)}catch(e){triggerAnalysis(t,a,`Area @ ${t.toFixed(2)}, ${a.toFixed(2)}`)}}
         async function searchLocation(){const e=searchInput.value;if(!e)return;showStatus(`Searching for ${e}...`);try{const t=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(e)}&format=json&limit=1&accept-language=en`);if(!t.ok)throw new Error("Search service unavailable.");const a=await t.json();if(a&&a.length>0){const{lat:e,lon:t,display_name:l}=a[0],s=parseFloat(e),o=parseFloat(t);clickMarker&&map.removeLayer(clickMarker),clickMarker=L.marker([s,o]).addTo(map),map.setView([s,o],11),triggerAnalysis(s,o,l)}else hideStatus(),resultPanel.innerHTML=`<p style="padding: 15px; text-align: center;">Error: Location "<strong>${e}</strong>" not found.</p>`,resultPanel.classList.add("visible")}catch(e){hideStatus(),resultPanel.innerHTML=`<p style="padding: 15px; text-align: center;">Error: Search service failed. Please try again later.</p>`,resultPanel.classList.add("visible")}}
         
