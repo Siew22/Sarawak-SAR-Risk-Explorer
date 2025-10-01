@@ -1,4 +1,5 @@
-﻿services:
+﻿# Ultimate, "Double Insurance" CORS docker-compose file
+services:
   app:
     build: .
     container_name: sar_backend_app
@@ -14,11 +15,13 @@
       - app
     env_file:
       - .env
-    # [Ultimate Final Fix] Use the ABSOLUTELY simplest command.
-    # ALL header modifications are removed. CORS is now handled 100% by FastAPI.
+    # [Ultimate CORS Final Fix] Use the full set of modern ngrok CORS headers.
     command:
       - "http"
       - "app:8000"
       - "--log=stdout"
       - "--basic-auth=nasa:spaceapps2025"
       - "--domain=juliette-unattempted-tammara.ngrok-free.dev"
+      - "--response-header-add=Access-Control-Allow-Origin:*"
+      - "--response-header-add=Access-Control-Allow-Headers:*"
+      - "--response-header-add=Access-Control-Allow-Methods:GET,POST,OPTIONS"
