@@ -187,7 +187,10 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
 
 
 # --- API Routes ---
-@app.get("/", tags=["General"])
+@app.get("/health", tags=["System"])
+def health_check():
+    return {"status": "healthy"}
+
 def read_root():
     return {"message": "Welcome to the Smart Analysis API! See /docs for details."}
 
@@ -207,4 +210,4 @@ def get_task_status(task_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main_professional:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
