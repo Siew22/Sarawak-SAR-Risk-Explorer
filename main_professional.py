@@ -210,4 +210,10 @@ def get_task_status(task_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # 修改后的代码
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=8000,
+        root_path="/api/v9" # <--- 尝试添加这个参数
+    )
