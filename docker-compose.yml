@@ -1,10 +1,9 @@
-﻿# 'version' attribute is removed.
-services:
+﻿services:
   app:
     build: .
     container_name: sar_backend_app
     volumes:
-    - "C:/Users/User/.config/earthengine:/root/.config/earthengine"
+      - 'C:\Users\User\.config\earthengine:/root/.config/earthengine'
 
   ngrok:
     image: ngrok/ngrok:latest
@@ -15,5 +14,11 @@ services:
       - app
     env_file:
       - .env
-    command: >
-      sh -c "ngrok http app:8000 --basic-auth='nasa:spaceapps2025' --log=stdout --cors-allow-origin='*'"
+    # [Final "Bulletproof" Fix] Use the list format for the command to avoid any shell parsing issues.
+    command:
+      - "http"
+      - "app:8000"
+      - "--log=stdout"
+      - "--basic-auth=nasa:spaceapps2025"
+      - "--domain=juliette-unattempted-tammara.ngrok-free.dev"
+      - "--response-header-add=Access-Control-Allow-Origin:*"
