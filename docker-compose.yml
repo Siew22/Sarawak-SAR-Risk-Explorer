@@ -1,11 +1,11 @@
-﻿# Ultimate, simplified, and robust docker-compose file
+﻿# Ultimate, simplified, and self-contained docker-compose file
 services:
   app:
     build: .
     container_name: sar_backend_app
     volumes:
       # This correctly mounts your GEE credentials
-      - C:\Users\User\.config\earthengine:/root/.config/earthengine
+      - 'C:\Users\User\.config\earthengine:/root/.config/earthengine'
 
   ngrok:
     image: ngrok/ngrok:latest
@@ -16,7 +16,8 @@ services:
       - app
     env_file:
       - .env
-    # [Final Fix] Simplest possible command. CORS is now handled by FastAPI.
+    # [Final Fix] Use the simplest possible command with the static domain.
+    # CORS is now handled by the FastAPI app itself.
     command:
       - "http"
       - "app:8000"
