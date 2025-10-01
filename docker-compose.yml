@@ -1,21 +1,27 @@
-﻿services:
+﻿# docker-compose.yml
+
+services:
   app:
     build: .
     container_name: sar_backend_app
     volumes:
-      # This correctly mounts your GEE credentials
       - 'C:\Users\User\.config\earthengine:/root/.config/earthengine'
+    # 我们不需要在这里暴露端口，因为 ngrok 会直接连接到这个服务
 
   ngrok:
     image: ngrok/ngrok:latest
     container_name: sar_ngrok_tunnel
-    # We no longer map port 4040, as the TCP tunnel has no web interface
+    ports:
+      - "4040:4040" # 暴露 ngrok 的管理界面，方便调试
     depends_on:
       - app
     env_file:
       - .env
-    # [Ultimate Final Fix] Use TCP tunnel to bypass all ngrok HTTP processing issues.
     command:
-      - "tcp"
+      # 1. 使用 'http' 而不是 'tcp'
+      # 2. 连接到服务名 'app' 的 8000 端口
+      # 3. 绑定到你的固定域名
+      - "http"
       - "app:8000"
+      - "--domain=juliette-unattempted-tammara.ngrok-free.dev" # <--- 在这里粘贴你自己的固定域名
       - "--log=stdout"
