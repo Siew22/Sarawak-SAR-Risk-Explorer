@@ -20,7 +20,7 @@
       - "app:8000"
       - "--log=stdout"
       - "--basic-auth=nasa:spaceapps2025"
-      - "--domain=https://juliette-unattempted-tammara.ngrok-free.dev/"
+      - "--domain=juliette-unattempted-tammara.ngrok-free.dev"
       - "--response-header-add=Access-Control-Allow-Origin:*"
       - "--response-header-add=Access-Control-Allow-Headers:*"
       - "--response-header-add=Access-Control-Allow-Methods:GET,POST,OPTIONS"
