@@ -1,10 +1,9 @@
-﻿# 'version' attribute is removed.
-services:
+﻿services:
   app:
     build: .
     container_name: sar_backend_app
     volumes:
-      - 'C:\Users\User\.config\earthengine:/root/.config/earthengine' # Hard-coded path
+      - 'C:\Users\User\.config\earthengine:/root/.config/earthengine'
 
   ngrok:
     image: ngrok/ngrok:latest
@@ -15,10 +14,11 @@ services:
       - app
     env_file:
       - .env
-    # [Ultimate Final Fix] Use the correct, modern ngrok syntax for adding CORS headers.
+    # [Ultimate Final Fix] Use the --domain flag to assign a permanent address.
     command:
       - "http"
       - "app:8000"
-      - "--basic-auth=nasa:spaceapps2025"
       - "--log=stdout"
+      - "--basic-auth=nasa:spaceapps2025"
       - "--response-header-add=Access-Control-Allow-Origin:*"
+      - "--domain=juliette-unattempted-tammara.ngrok-free.dev" # <-- The magic happens here
