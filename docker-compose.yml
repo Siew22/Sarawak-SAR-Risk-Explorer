@@ -1,10 +1,9 @@
-﻿# Ultimate, simplified, and self-contained docker-compose file
+﻿# Ultimate, "Double Insurance" CORS docker-compose file
 services:
   app:
     build: .
     container_name: sar_backend_app
     volumes:
-      # This correctly mounts your GEE credentials
       - 'C:\Users\User\.config\earthengine:/root/.config/earthengine'
 
   ngrok:
@@ -16,11 +15,13 @@ services:
       - app
     env_file:
       - .env
-    # [Final Fix] Use the simplest possible command with the static domain.
-    # CORS is now handled by the FastAPI app itself.
+    # [Ultimate CORS Final Fix] Use the full set of modern ngrok CORS headers.
     command:
       - "http"
       - "app:8000"
       - "--log=stdout"
       - "--basic-auth=nasa:spaceapps2025"
       - "--domain=juliette-unattempted-tammara.ngrok-free.dev"
+      - "--response-header-add=Access-Control-Allow-Origin:*"
+      - "--response-header-add=Access-Control-Allow-Headers:*"
+      - "--response-header-add=Access-Control-Allow-Methods:GET,POST,OPTIONS"
