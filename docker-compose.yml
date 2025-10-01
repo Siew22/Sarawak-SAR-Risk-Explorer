@@ -3,17 +3,19 @@
     build: .
     container_name: sar_backend_app
     volumes:
+      # This correctly mounts your GEE credentials
       - 'C:\Users\User\.config\earthengine:/root/.config/earthengine'
 
   ngrok:
     image: ngrok/ngrok:latest
     container_name: sar_ngrok_tunnel
+    # We no longer map port 4040, as the TCP tunnel has no web interface
     depends_on:
       - app
-    # [Ultimate Final Fix] Pass the authtoken DIRECTLY in the command.
-    # This bypasses any potential issues with env_file.
+    env_file:
+      - .env
+    # [Ultimate Final Fix] Use TCP tunnel to bypass all ngrok HTTP processing issues.
     command:
       - "tcp"
       - "app:8000"
       - "--log=stdout"
-      - "--authtoken=2w4uQUFWisFpNRn7nXIuo9oJ6ks_66QJeh3V3DviwHjeSVzZ5"
