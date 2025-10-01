@@ -1,6 +1,6 @@
 # All comments, variable names, and API outputs are in English as requested.
 from fastapi import FastAPI, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware # This is the key import for built-in CORS handling
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
@@ -12,12 +12,12 @@ import ee
 # Ensure 'gee_functions_professional.py' (the ultimate dual-core version) is in the same directory.
 import gee_functions_professional as gee_pro
 
-# --- [V9.2] Final API Models ---
+# --- API Models ---
 class OnClickAnalysisRequest(BaseModel):
     lat: float = Field(..., example=1.557)
     lon: float = Field(..., example=110.35)
     analysis_type: str = Field(..., example="flood", description="Type of analysis: 'flood' or 'deforestation'")
-    buffer_degree: Optional[float] = Field(0.1)
+    buffer_degree: Optional[float] = Field(0.1, description="Radius in degrees to create the analysis area.")
 
 class AnalysisTask(BaseModel):
     task_id: str
@@ -32,29 +32,6 @@ class AnalysisSubmitResponse(BaseModel):
     task_id: str
     status_endpoint: str
 
-# --- FastAPI App Instance ---
-app = FastAPI(title="Self-Contained Smart Analysis API", version="9.2.0")
-
-# --- [V9.2 Final Fix] Add the CORS Middleware to the application. ---
-# This is the most robust and professional way to handle CORS. It makes the backend self-sufficient.
-# We explicitly list the Vercel app's origin for better security than a wildcard (*).
-origins = [
-    "https://sarawak-sar-risk-explorer-ten.vercel.app", # Your production frontend
-    "http://localhost",
-    "http://localhost:8080", # Common port for local frontend development
-    "http://127.0.0.1",
-    "http://127.0.0.1:8080",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"], # Allows all methods (GET, POST, etc.)
-    allow_headers=["*"], # Allows all headers
-)
-
-
 # --- In-memory Task Storage ---
 TASKS: Dict[str, Dict] = {}
 
@@ -68,7 +45,7 @@ def get_weather_forecast(lat: float, lon: float) -> Dict[str, Any]:
             "daily": "weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,windspeed_10m_max",
             "timezone": "Asia/Kuala_Lumpur"
         }
-        response = requests.get(base_url, params=params, timeout=10)
+        response = requests.get(base_url, params=params)
         response.raise_for_status()
         return {"success": True, "data": response.json()}
     except Exception as e:
@@ -189,7 +166,10 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
         TASKS[task_id]['result'] = {"error": f"Backend task failed: {type(e).__name__} - {str(e)}"}
         TASKS[task_id]['completed_at'] = time.time()
 
-# --- API Routes ---
+# --- FastAPI App & Routes (V9) ---
+app = FastAPI(title="Smart 'Then vs Now' Analysis API", version="9.0.0")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
 @app.get("/", tags=["General"])
 def read_root():
     return {"message": "Welcome to the Smart Analysis API! See /docs for details."}
