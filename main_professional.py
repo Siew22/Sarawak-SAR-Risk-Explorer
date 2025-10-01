@@ -12,7 +12,23 @@ import ee
 # Ensure 'gee_functions_professional.py' (the ultimate dual-core version) is in the same directory.
 import gee_functions_professional as gee_pro
 
-# --- [V9.2] Final API Models ---
+# --- FastAPI App Instance & CORS Configuration ---
+app = FastAPI(title="Ultimate Self-Contained Smart Analysis API", version="9.3.0")
+
+# [V9.3 Ultimate CORS Fix] Configure the CORS Middleware.
+# Using a wildcard ["*"] for allow_origins is the most robust setting for a public API
+# in a hackathon context, ensuring that requests from any frontend (including Vercel previews)
+# will be accepted. This is our primary and most reliable line of defense against CORS errors.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],    # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],    # Allow all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],    # Allow all headers
+)
+
+
+# --- API Models ---
 class OnClickAnalysisRequest(BaseModel):
     lat: float = Field(..., example=1.557)
     lon: float = Field(..., example=110.35)
@@ -32,31 +48,10 @@ class AnalysisSubmitResponse(BaseModel):
     task_id: str
     status_endpoint: str
 
-# --- FastAPI App Instance ---
-app = FastAPI(title="Self-Contained Smart Analysis API", version="9.2.0")
-
-# --- [V9.2 Final Fix] Add the CORS Middleware to the application. ---
-# This is the most robust and professional way to handle CORS. It makes the backend self-sufficient.
-# We explicitly list the Vercel app's origin for better security than a wildcard (*).
-origins = [
-    "https://sarawak-sar-risk-explorer-ten.vercel.app", # Your production frontend
-    "http://localhost",
-    "http://localhost:8080", # Common port for local frontend development
-    "http://127.0.0.1",
-    "http://127.0.0.1:8080",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"], # Allows all methods (GET, POST, etc.)
-    allow_headers=["*"], # Allows all headers
-)
-
 
 # --- In-memory Task Storage ---
 TASKS: Dict[str, Dict] = {}
+
 
 # --- Helper Functions (Weather & XAI) ---
 def get_weather_forecast(lat: float, lon: float) -> Dict[str, Any]:
@@ -111,6 +106,7 @@ def generate_deforestation_hypothesis(gee_result, geometry, period1_str, period2
         "next_steps": "Recommend cross-validation with high-resolution imagery or field reports."
     }
     return {"story": story, "area_sq_km": round(deforestation_area_km2, 2)}
+
 
 # --- Ultimate Background Task Runner with Smart "Then vs Now" Logic ---
 def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
@@ -188,6 +184,7 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
         TASKS[task_id]['status'] = "FAILED"
         TASKS[task_id]['result'] = {"error": f"Backend task failed: {type(e).__name__} - {str(e)}"}
         TASKS[task_id]['completed_at'] = time.time()
+
 
 # --- API Routes ---
 @app.get("/", tags=["General"])
