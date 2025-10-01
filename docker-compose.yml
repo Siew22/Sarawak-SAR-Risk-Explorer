@@ -1,26 +1,19 @@
-﻿version: '3.8'
-
+﻿# 'version' attribute is removed.
 services:
-  # 服務 1: 我們的 FastAPI 後端應用
   app:
     build: .
     container_name: sar_backend_app
     volumes:
-      - "%UserProfile%\\.config\\earthengine:/root/.config/earthengine" # For Windows CMD/PowerShell based systems
-      # For macOS/Linux, the volume path would be:
-      # - "~/.config/earthengine:/root/.config/earthengine"
-    # Port mapping to the host is no longer needed as ngrok connects directly
+    - "C:/Users/User/.config/earthengine:/root/.config/earthengine"
 
-  # 服務 2: 我們的 ngrok 公網隧道
   ngrok:
     image: ngrok/ngrok:latest
     container_name: sar_ngrok_tunnel
     ports:
-      - "4040:4040" # Optional: map the ngrok web interface for debugging
+      - "4040:4040"
     depends_on:
-      - app # Ensures the 'app' service starts first
-    environment:
-      # Reads your authtoken securely from the .env file
-      - NGROK_AUTHTOKEN=
+      - app
+    env_file:
+      - .env
     command: >
       sh -c "ngrok http app:8000 --basic-auth='nasa:spaceapps2025' --log=stdout --cors-allow-origin='*'"
