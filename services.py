@@ -150,9 +150,9 @@ def get_routes_from_graphhopper(start: schemas.Point, end: schemas.Point) -> Lis
         "points_encoded": "true", # Important for polyline
         "instructions": "false",
         "calc_points": "true",
-        #"algorithm": "alternative_route", # Ask for alternatives
-        #"ch.disable": "true", # Disabling CH is often needed for alternative routes
-        #"alternative_route.max_paths": 3,
+        "algorithm": "alternative_route", # Ask for alternatives
+        "ch.disable": "true", # Disabling CH is often needed for alternative routes
+        "alternative_route.max_paths": 3,
     }
 
     print("\n--- DEBUGGING GraphHopper Routing Request ---")
