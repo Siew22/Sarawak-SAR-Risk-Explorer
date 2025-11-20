@@ -1,3 +1,5 @@
+# main_professional.py
+
 # ==========================================================================
 #
 #   main_professional.py - SUPER APP FINAL & COMPLETE VERSION
@@ -56,7 +58,7 @@ if models and engine:
 # ==========================================================================
 # --- FASTAPI APPLICATION SETUP ---
 # ==========================================================================
-app = FastAPI(title="JalanSafe & SAR Risk Explorer SUPER APP", version="3.2.0")
+app = FastAPI(title="JalanSafe & SAR Risk Explorer SUPER APP", version="3.3.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
@@ -145,7 +147,7 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
 
 @app.get("/", tags=["System"])
 def read_root():
-    return {"status": "ok", "message": "Welcome to the Super App API v3.2.0"}
+    return {"status": "ok", "message": "Welcome to the Super App API v3.3.0"}
 
 # --- NASA Geo-Intel API Endpoints ---
 @app.post("/api/v9/analyze", response_model=AnalysisSubmitResponse, status_code=202, tags=["NASA Geo-Intel Analysis"])
@@ -166,18 +168,19 @@ def get_task_status(task_id: str):
 def get_smart_routes_from_gps(request: schemas.RouteRequestWithStartCoords, db: Session = Depends(get_db)):
     start_point = schemas.Point(lat=request.start_lat, lon=request.start_lon)
     end_point = services.geocode_location(request.end_name)
-    if not end_point: raise HTTPException(status_code=404, detail=f"Could not find a location for destination: '{request.end_name}'.")
+    if not end_point:
+        raise HTTPException(status_code=404, detail=f"Could not find a location for destination: '{request.end_name}'.")
     
-    # --- CRITICAL CHANGE: Call the GraphHopper function here as well ---
-    routes = services.get_routes_from_graphhopper(start_point, end_point)
-
-    if not routes: raise HTTPException(status_code=404, detail="No routes could be found. The destination may be too far or unreachable by car.")
+    routes = services.get_multiple_routes_with_fallback(start_point, end_point)
+    
+    if not routes:
+        raise HTTPException(status_code=404, detail="No routes could be found. The destination may be too far or unreachable by car.")
+        
     smart_routes = services.calculate_ai_smart_routes(routes, db)
     return smart_routes
 
-@app.post("/api/v1/routes/by-name", response_model=List[schemas.RouteResult], tags=["JalanSafe AI - Routing"], deprecated=True)
+@app.post("/api/v1/routes/by-name", response_model=List[schemas.RouteResult], tags=["JalanSafe AI - Routing"])
 def get_smart_routes_by_name(request: schemas.RouteRequestByName, db: Session = Depends(get_db)):
-    
     proximity = None
     if request.current_lat is not None and request.current_lon is not None:
         proximity = schemas.Point(lat=request.current_lat, lon=request.current_lon)
@@ -188,17 +191,12 @@ def get_smart_routes_by_name(request: schemas.RouteRequestByName, db: Session = 
     if not start_point or not end_point:
         raise HTTPException(status_code=404, detail="Could not geocode one or both locations.")
         
-    # --- CRITICAL CHANGE: Call the GraphHopper function instead of ORS ---
-    routes = services.get_routes_from_graphhopper(start_point, end_point)
+    routes = services.get_multiple_routes_with_fallback(start_point, end_point)
     
     if not routes: 
-        raise HTTPException(status_code=404, detail="No routes could be found between specified points.")
+        raise HTTPException(status_code=404, detail="No route could be found, even with the primary routing service.")
         
     smart_routes = services.calculate_ai_smart_routes(routes, db) 
-    
-    if isinstance(smart_routes, dict):
-        return [smart_routes]
-    
     return smart_routes
 
 @app.post("/api/v1/reports", response_model=schemas.Report, status_code=201, tags=["JalanSafe AI - Contribution"])
@@ -222,6 +220,11 @@ def create_new_comment(report_id: int, comment: schemas.CommentCreate, db: Sessi
 def get_leaderboard(db: Session = Depends(get_db)):
     return crud.get_user_rankings(db=db)
 
+@app.post("/api/v1/routes/choose", response_model=schemas.RouteChoiceCreate, tags=["JalanSafe AI - User Interaction"])
+def choose_route(choice: schemas.RouteChoiceCreate, db: Session = Depends(get_db)):
+    print(f"User {choice.user_id} chose route with hash: {choice.chosen_route_hash}")
+    return crud.create_route_choice(db=db, choice=choice)
+
 @app.post("/api/v1/users", response_model=schemas.User, status_code=201, tags=["User Management"])
 def create_new_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if crud.get_user_by_email(db, email=user.email):
@@ -230,18 +233,42 @@ def create_new_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @app.get("/api/v1/reports", response_model=List[schemas.Report], tags=["JalanSafe AI - Data"])
 def get_all_reports(db: Session = Depends(get_db)):
-    """
-    Retrieves all reports from the database.
-    """
     return db.query(models.Report).order_by(models.Report.created_at.desc()).all()
 
 @app.get("/api/v1/reports/{report_id}/comments", response_model=List[schemas.Comment], tags=["JalanSafe AI - Contribution"])
 def get_comments(report_id: int, db: Session = Depends(get_db)):
+    return crud.get_comments_for_report(db, report_id=report_id)
+
+class TrafficSimulationRequest(BaseModel):
+    route_hash: str
+    count: int
+
+@app.post("/api/v1/simulate/traffic", tags=["Demo Tools"])
+def simulate_traffic(req: TrafficSimulationRequest, db: Session = Depends(get_db)):
     """
-    Retrieves all comments for a specific report.
+    Demo Tool: Instantly adds 'count' fake users to a specific route to simulate congestion.
     """
-    comments = crud.get_comments_for_report(db, report_id=report_id)
-    return comments
+    for _ in range(req.count):
+        # Use user_id 999 for simulated traffic bots
+        fake_choice = models.RouteChoice(user_id=999, chosen_route_hash=req.route_hash)
+        db.add(fake_choice)
+    db.commit()
+    return {"message": f"Successfully injected {req.count} fake users onto route {req.route_hash[:8]}..."}
+
+class ClearTrafficRequest(BaseModel):
+    route_hash: str
+
+@app.post("/api/v1/simulate/clear_traffic", tags=["Demo Tools"])
+def clear_traffic(req: ClearTrafficRequest, db: Session = Depends(get_db)):
+    """
+    Demo Tool: Instantly clears all traffic records for a route.
+    Simulates that users have passed the road and it is now clear.
+    """
+    db.query(models.RouteChoice).filter(
+        models.RouteChoice.chosen_route_hash == req.route_hash
+    ).delete()
+    db.commit()
+    return {"message": f"Traffic cleared for route {req.route_hash[:8]}..."}
 
 # --- Main App Runner ---
 if __name__ == "__main__":

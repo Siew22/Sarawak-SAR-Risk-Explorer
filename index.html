@@ -10,16 +10,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 
     <style>
-        /* ==========================================================================
-           All-in-One Stylesheet
-           ========================================================================== */
-
-        /* --- 1. 基本和布局设置 --- */
+        /* --- 1. Basic Layout --- */
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; background: #1a1a1a; overflow: hidden; }
         #map { position: absolute; top: 0; left: 0; height: 100%; width: 100%; z-index: 1; }
         .leaflet-container { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #1a1a1a; }
 
-        /* --- 2. 通用浮动面板样式 --- */
+        /* --- 2. Floating Panels --- */
         .floating-panel {
             position: absolute; z-index: 1000;
             background: rgba(30, 30, 30, 0.85);
@@ -29,8 +25,6 @@
             transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             color: #f0f0f0;
         }
-
-        /* --- 3. 面板具体位置和样式 --- */
         #control-panel { top: 20px; left: 20px; width: 350px; padding: 15px 20px; }
         #result-panel { top: 220px; left: 20px; width: 350px; max-height: calc(100vh - 240px); padding: 15px 20px; overflow-y: auto; transform: translateX(-120%); }
         #result-panel.visible { transform: translateX(0); }
@@ -38,7 +32,7 @@
         #forecast-panel { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80%; max-width: 1200px; padding: 0; border-radius: 12px 12px 0 0; overflow: hidden; opacity: 0; transition: opacity 0.4s ease, bottom 0.4s ease; pointer-events: none; z-index: 1001;}
         #forecast-panel.visible { opacity: 1; pointer-events: auto; }
 
-        /* --- 4. UI 组件：切换器 --- */
+        /* --- 3. Switchers & Buttons --- */
         .mode-switcher { display: flex; margin-bottom: 20px; background: #2a2a2e; border-radius: 8px; padding: 5px; }
         .mode-switcher .switch-button { flex: 1; padding: 10px; border: none; background: transparent; color: #aaa; cursor: pointer; border-radius: 6px; font-weight: 700; font-size: 14px; transition: all .2s ease; display: flex; align-items: center; justify-content: center; }
         .mode-switcher .switch-button.active { background: #0d6efd; color: #fff; }
@@ -48,8 +42,9 @@
         .analysis-switcher .switch-button { flex: 1; padding: 8px; border: none; background: transparent; color: #aaa; cursor: pointer; border-radius: 4px; font-weight: 700; font-size: 14px; transition: all .2s ease; }
         .analysis-switcher .switch-button.active { background: #0d6efd; color: #fff; }
 
-        /* --- 5. UI 组件：表单和按钮 --- */
         #control-panel h4 { margin: 0 0 15px 0; color: #fff; font-size: 18px; }
+        
+        /* --- 4. Search Forms --- */
         .search-container { display: flex; margin-bottom: 10px; }
         #geointel-search-input { flex-grow: 1; border: 1px solid #444; padding: 10px; border-radius: 6px 0 0 6px; background: #333; color: #fff; font-size: 14px; outline: none; }
         .instructions { font-size: 13px; color: #aaa; text-align: center; }
@@ -61,7 +56,7 @@
         #map-buttons-container { position: absolute; z-index: 999; bottom: 30px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
         .map-button { width: 50px; height: 50px; border-radius: 50%; border: none; background: #0d6efd; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; }
 
-        /* --- 6. UI 组件：结果展示 --- */
+        /* --- 5. Result Display --- */
         .location-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: #fff; }
         .risk-summary { padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #fff; text-align: center; }
         .risk-summary h2 { margin: 0 0 5px 0; font-size: 24px; font-weight: 600; }
@@ -80,7 +75,7 @@
         .route-item h5 { margin: 0 0 5px 0; font-size: 16px; }
         .route-item p { margin: 0; font-size: 13px; opacity: 0.8; }
 
-        /* --- 7. UI 组件：模态框 (Modal) --- */
+        /* --- 6. Modals --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .modal-content { background: #1e1e1e; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); position: relative; color: #e0e0e0; }
         .modal-content h3 { margin: 0 0 20px 0; color: #0d6efd; }
@@ -88,6 +83,7 @@
         .modal-close-button { position: absolute; top: 10px; right: 15px; background: none; border: none; color: #aaa; font-size: 24px; cursor: pointer; }
         .hidden { display: none !important; }
 
+        /* --- 7. Leaderboard & Forms --- */
         #leaderboard-list { max-height: 60vh; overflow-y: auto; }
         .leaderboard-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #333; }
         .rank-number { font-size: 18px; font-weight: 700; width: 40px; text-align: center; color: #0d6efd; }
@@ -98,13 +94,13 @@
         #report-form select, #report-form textarea, #report-form input { width: 100%; box-sizing: border-box; border: 1px solid #444; padding: 12px; border-radius: 6px; background: #333; color: #fff; font-size: 14px; }
         #report-form button { border: none; background: #0d6efd; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px; }
 
-        /* --- 8. UI 组件：覆盖层和提示 --- */
+        /* --- 8. Overlays & Tooltips --- */
         #status-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2001; background: rgba(0,0,0,.8); color: #fff; padding: 20px 30px; border-radius: 10px; font-size: 20px; display: none; align-items: center; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1.5s linear infinite; display: inline-block; vertical-align: middle; margin-right: 15px; }
         #action-tooltip { position: absolute; top: 185px; left: 20px; background-color: #0d6efd; color: #fff; padding: 10px 15px; border-radius: 6px; font-size: 14px; z-index: 2001; opacity: 0; transform: translateY(-20px); transition: opacity .3s ease, transform .3s ease; pointer-events: none; }
         
-        /* --- 9. 其他模块样式 --- */
+        /* --- 9. Layer List --- */
         .layer-list { list-style: none; padding: 0; margin: 0; }
         .layer-item { padding: 12px 15px; margin: 5px 0; border-radius: 6px; cursor: pointer; transition: background-color .2s ease; display: flex; align-items: center; }
         .layer-item:hover { background-color: rgba(255,255,255,.1); }
@@ -112,6 +108,7 @@
         .layer-item.inactive { color: #888; cursor: pointer; background-color: transparent !important; }
         .layer-item i { margin-right: 15px; width: 20px; text-align: center; }
 
+        /* --- 10. Radar & Weather --- */
         #radar-timeline-panel { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(30,30,30,.85); padding: 10px 15px; border-radius: 8px; display: none; align-items: center; width: 50%; max-width: 600px; }
         #radar-play-button { background: 0 0; border: none; color: #fff; font-size: 20px; cursor: pointer; margin-right: 10px; }
         #radar-timestamp { font-size: 14px; font-weight: 700; min-width: 80px; text-align: center; }
@@ -134,118 +131,39 @@
         .issue-marker-icon { text-align: center; }
         
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                background-color: rgba(40, 167, 69, 0.3);
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                background-color: transparent;
-                transform: translateY(0);
-            }
+            from { opacity: 0; background-color: rgba(40, 167, 69, 0.3); transform: translateY(10px); }
+            to { opacity: 1; background-color: transparent; transform: translateY(0); }
         }
-        .new-comment-highlight {
-            animation: fadeIn 0.8s ease-out forwards;
-        }
-        .fa-spinner {
-             animation: spin 1.5s linear infinite;
-        }
+        .new-comment-highlight { animation: fadeIn 0.8s ease-out forwards; }
+        .fa-spinner { animation: spin 1.5s linear infinite; }
     </style>
 </head>
 <body>
 
+    <!-- HTML structure is complete and correct -->
     <div id="map"></div>
-
     <div id="control-panel" class="floating-panel">
-        <div class="mode-switcher">
-            <button id="switch-geointel" class="switch-button active"><i class="fa-solid fa-satellite-dish"></i> Geo-Intel</button>
-            <button id="switch-jalansafe" class="switch-button"><i class="fa-solid fa-road"></i> JalanSafe AI</button>
-        </div>
-        <div id="geointel-panel-content">
-            <h4><i class="fa-solid fa-satellite"></i> Analysis Mode</h4>
-            <div class="analysis-switcher">
-                <button id="switch-flood" class="switch-button active">Flood Risk</button>
-                <button id="switch-deforestation" class="switch-button">Deforestation</button>
-            </div>
-            <div class="search-container">
-                <input type="text" id="geointel-search-input" placeholder="e.g., Sibu, Sarawak">
-                <button id="geointel-search-button" title="Search Location"><i class="fa-solid fa-search"></i></button>
-            </div>
-            <p class="instructions" id="geointel-instructions">Click map or search to analyze risk.</p>
-        </div>
-        <div id="jalansafe-panel-content" class="hidden">
-            <h4><i class="fa-solid fa-route"></i> AI Smart Navigator</h4>
-            <div class="route-search">
-                <input type="text" id="start-location-input" placeholder="Enter start location">
-                <input type="text" id="end-location-input" placeholder="Enter end location">
-                <button id="search-route-button">Find Best Route</button>
-            </div>
-            <div id="route-results-panel"></div>
-        </div>
+        <div class="mode-switcher"><button id="switch-geointel" class="switch-button active"><i class="fa-solid fa-satellite-dish"></i> Geo-Intel</button><button id="switch-jalansafe" class="switch-button"><i class="fa-solid fa-road"></i> JalanSafe AI</button></div>
+        <div id="geointel-panel-content"><h4><i class="fa-solid fa-satellite"></i> Analysis Mode</h4><div class="analysis-switcher"><button id="switch-flood" class="switch-button active">Flood Risk</button><button id="switch-deforestation" class="switch-button">Deforestation</button></div><div class="search-container"><input type="text" id="geointel-search-input" placeholder="e.g., Sibu, Sarawak"><button id="geointel-search-button" title="Search Location"><i class="fa-solid fa-search"></i></button></div><p class="instructions" id="geointel-instructions">Click map or search to analyze risk.</p></div>
+        <div id="jalansafe-panel-content" class="hidden"><h4><i class="fa-solid fa-route"></i> AI Smart Navigator</h4><div class="route-search"><div style="position: relative; display: flex; align-items: center;"><input type="text" id="start-location-input" placeholder="Enter start location"><button id="use-current-location-btn" title="Use my current location" style="position: absolute; right: 5px; width: 35px; height: 35px; border: none; background: transparent; color: #aaa; font-size: 18px; cursor: pointer;"><i class="fa-solid fa-location-crosshairs"></i></button></div><input type="text" id="end-location-input" placeholder="Enter end location"><button id="search-route-button">Find Best Route</button></div><div id="route-results-panel"></div></div>
     </div>
-
     <div id="result-panel" class="floating-panel"></div>
-    <div id="forecast-panel" class="floating-panel">
-        <div class="daily-forecast-container" id="daily-forecast-container"></div>
-        <div class="hourly-forecast-container" id="hourly-forecast-container"></div>
-    </div>
-
-    <div id="layer-panel" class="floating-panel">
-        <ul class="layer-list" id="layer-list"></ul>
-    </div>
-
-    <div id="map-buttons-container">
-        <button id="report-button" class="map-button" title="Report Road Issue"><i class="fa-solid fa-plus"></i></button>
-        <button id="leaderboard-button" class="map-button" title="View Leaderboard"><i class="fa-solid fa-trophy"></i></button>
-    </div>
-
-    <div id="leaderboard-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button class="modal-close-button">&times;</button>
-            <h3><i class="fa-solid fa-trophy"></i> Top Contributors</h3>
-            <div id="leaderboard-list"></div>
-        </div>
-    </div>
-
-    <div id="report-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button class="modal-close-button">&times;</button>
-            <h3><i class="fa-solid fa-triangle-exclamation"></i> Report an Issue</h3>
-            <p>Report location: <strong id="report-address">Fetching address...</strong></p>
-            <form id="report-form">
-                <select id="report-type" required>
-                    <option value="" disabled selected>Select issue type...</option>
-                    <option value="road_condition">Road Condition</option>
-                    <option value="traffic_light">Traffic Light Fault</option>
-                </select>
-                <textarea id="report-description" placeholder="Describe the issue..." required></textarea>
-                <input type="file" id="report-photo" accept="image/*" required>
-                <button type="submit">Submit Report</button>
-            </form>
-        </div>
-    </div>
-    
-    <div id="route-details-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button class="modal-close-button">&times;</button>
-            <h3 id="route-details-title">Route Details</h3>
-            <div id="route-details-content"></div>
-        </div>
-    </div>
-    
+    <div id="forecast-panel" class="floating-panel"><div class="daily-forecast-container" id="daily-forecast-container"></div><div class="hourly-forecast-container" id="hourly-forecast-container"></div></div>
+    <div id="layer-panel" class="floating-panel"><ul class="layer-list" id="layer-list"></ul></div>
+    <div id="map-buttons-container"><button id="report-button" class="map-button" title="Report Road Issue"><i class="fa-solid fa-plus"></i></button><button id="leaderboard-button" class="map-button" title="View Leaderboard"><i class="fa-solid fa-trophy"></i></button></div>
+    <div id="leaderboard-modal" class="modal-overlay hidden"><div class="modal-content"><button class="modal-close-button">&times;</button><h3><i class="fa-solid fa-trophy"></i> Top Contributors</h3><div id="leaderboard-list"></div></div></div>
+    <div id="report-modal" class="modal-overlay hidden"><div class="modal-content"><button class="modal-close-button">&times;</button><h3><i class="fa-solid fa-triangle-exclamation"></i> Report an Issue</h3><p>Report location: <strong id="report-address">Fetching address...</strong></p><form id="report-form"><select id="report-type" required><option value="" disabled selected>Select issue type...</option><option value="road_condition">Road Condition</option><option value="traffic_light">Traffic Light Fault</option></select><textarea id="report-description" placeholder="Describe the issue..." required></textarea><input type="file" id="report-photo" accept="image/*" required><button type="submit">Submit Report</button></form></div></div>
+    <div id="route-details-modal" class="modal-overlay hidden"><div class="modal-content"><button class="modal-close-button">&times;</button><h3 id="route-details-title">Route Details</h3><div id="route-details-content"></div></div></div>
     <div id="status-overlay"></div>
     <div id="action-tooltip"></div>
-    <div id="radar-timeline-panel">
-        <button id="radar-play-button"><i class="fa-solid fa-play"></i></button>
-        <input type="range" id="radar-slider" style="flex-grow: 1; margin: 0 10px;">
-        <div id="radar-timestamp"></div>
-    </div>
+    <div id="radar-timeline-panel"><button id="radar-play-button"><i class="fa-solid fa-play"></i></button><input type="range" id="radar-slider" style="flex-grow: 1; margin: 0 10px;"><div id="radar-timestamp"></div></div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
+        // =========================================================================
         // --- 1. CONFIGURATION & GLOBAL STATE ---
+        // =========================================================================
         const API_BASE_URL = 'http://127.0.0.1:8000';
         const OWM_API_KEY = '5f66e14d6562958e2f9fb986b4fc8bdf';
 
@@ -283,14 +201,17 @@
             radarTimestamp: document.getElementById('radar-timestamp'),
         };
 
-        // --- 2. INITIALIZATION ---
-
+        // =========================================================================
+        // --- 2. INITIALIZATION & EVENT LISTENERS ---
+        // =========================================================================
         function initializeApp() {
             map = L.map('map', { zoomControl: false }).setView([4.21, 101.97], 6);
             L.control.zoom({ position: 'topright' }).addTo(map);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO & OSM' }).addTo(map);
+            
             temperatureLayerGroup = L.layerGroup().addTo(map);
             routeLayers.addTo(map);
+            
             setupEventListeners();
             initializeLayerPanel();
             updateLiveTemperatures();
@@ -307,14 +228,24 @@
             ui.reportBtn.addEventListener('click', handleReportButtonClick);
             ui.leaderboardBtn.addEventListener('click', showLeaderboard);
             ui.reportForm.addEventListener('submit', handleReportSubmit);
+            document.getElementById('use-current-location-btn').addEventListener('click', handleUseCurrentLocation);
 
-            document.querySelectorAll('.modal-close-button').forEach(btn => {
-                btn.addEventListener('click', (e) => e.target.closest('.modal-overlay').classList.add('hidden'));
+            document.body.addEventListener('click', function(event) {
+                if (event.target.classList.contains('modal-close-button')) {
+                    event.target.closest('.modal-overlay').classList.add('hidden');
+                }
+            });
+
+             ui.routeResultsPanel.addEventListener('click', (event) => {
+                const routeItem = event.target.closest('.route-item');
+                if (routeItem && routeItem.dataset.routeId) {
+                    showRouteDetails(routeItem.dataset.routeId);
+                }
             });
             
             document.addEventListener("keydown", e => {
                 if (e.key === "Escape") {
-                    document.querySelectorAll('.modal-overlay').forEach(modal => modal.classList.add('hidden'));
+                    document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(modal => modal.classList.add('hidden'));
                     resetDashboard();
                 }
             });
@@ -324,8 +255,9 @@
             map.on('zoomend', updateLiveTemperatures);
         }
         
+        // =========================================================================
         // --- 3. UI & LAYER MANAGEMENT ---
-
+        // =========================================================================
         function initializeLayerPanel() {
             ui.layerList.innerHTML = "";
             let availableLayers = [
@@ -373,6 +305,7 @@
                     item.classList.remove('active');
                 }
             });
+
             if (activeLayers.radar) {
                 activeLayers.radar.forEach(layer => { if (map.hasLayer(layer)) map.removeLayer(layer); });
                 activeLayers.radar = null;
@@ -394,6 +327,7 @@
                 return;
             }
             deactivateAllOverlays();
+
             if (item) item.classList.add('active');
             if (layerId === 'radar') {
                 startRadarAnimation();
@@ -402,22 +336,29 @@
                     map.addLayer(activeLayers[layerId]);
                 }
             }
+
             const aoiItem = document.querySelector('.layer-item[data-layer-id="aoi"]');
             if (aoiItem) {
                 if (layerId === 'aoi') aoiItem.classList.toggle('active');
-                if (aoiItem.classList.contains('active') && activeLayers.aoi && !map.hasLayer(activeLayers.aoi)) map.addLayer(activeLayers.aoi);
-                else if (!aoiItem.classList.contains('active') && activeLayers.aoi && map.hasLayer(activeLayers.aoi)) map.removeLayer(activeLayers.aoi);
+                
+                if (aoiItem.classList.contains('active') && activeLayers.aoi && !map.hasLayer(activeLayers.aoi)) {
+                    map.addLayer(activeLayers.aoi);
+                } else if (!aoiItem.classList.contains('active') && activeLayers.aoi && map.hasLayer(activeLayers.aoi)) {
+                    map.removeLayer(activeLayers.aoi);
+                }
             }
         }
         
         async function toggleIssuesLayer() {
             const item = document.querySelector('.layer-item[data-layer-id="issues"]');
             if (!item) return;
+
             if (item.classList.contains('active')) {
                 item.classList.remove('active');
                 if (map.hasLayer(issueLayerGroup)) map.removeLayer(issueLayerGroup);
                 return;
             }
+
             deactivateAllOverlays();
             item.classList.add('active');
             if (!map.hasLayer(issueLayerGroup)) map.addLayer(issueLayerGroup);
@@ -442,8 +383,10 @@
             const issueIcon = L.divIcon({
                 html: '<i class="fa-solid fa-triangle-exclamation" style="color: #ffc107; font-size: 20px; text-shadow: 0 0 3px black;"></i>',
                 className: 'issue-marker-icon',
-                iconSize: [24, 24], iconAnchor: [12, 12]
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
             });
+
             issues.forEach(issue => {
                 const marker = L.marker([issue.latitude, issue.longitude], { icon: issueIcon });
                 marker.reportId = issue.id;
@@ -457,21 +400,29 @@
         async function renderPopupContent(reportId) {
             const container = document.getElementById(`popup-content-${reportId}`);
             if (!container) return;
+
             try {
                 const numericReportId = parseInt(reportId, 10);
                 const issue = issuesData.find(i => i.id === numericReportId);
-                if (!issue) { container.innerHTML = `Error: Report with ID ${reportId} not found in local data.`; return; }
+                if (!issue) {
+                    container.innerHTML = `Error: Report with ID ${reportId} not found.`;
+                    return;
+                }
+
                 const commentsResponse = await fetch(`${API_BASE_URL}/api/v1/reports/${reportId}/comments`);
                 if (!commentsResponse.ok) throw new Error("Could not load comments.");
                 const comments = await commentsResponse.json();
+
                 const imageUrl = issue.photo_url.replace(/\\/g, '/');
                 const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}/${imageUrl}`;
+
                 const agreeComments = comments.filter(c => c.vote === 'agree');
                 const disagreeComments = comments.filter(c => c.vote === 'disagree');
+
                 let agreeHtml = agreeComments.map(c => `<li><strong>${c.owner.username}:</strong> ${c.comment_text}</li>`).join('');
                 let disagreeHtml = disagreeComments.map(c => `<li><strong>${c.owner.username}:</strong> ${c.comment_text}</li>`).join('');
-                const totalComments = comments.length;
 
+                const totalComments = comments.length;
                 let formHtml = '';
                 if (totalComments >= 10) {
                     formHtml = `<p style="text-align: center; color: #aaa; font-size: 12px;">Maximum number of comments (10) has been reached.</p>`;
@@ -487,7 +438,7 @@
                     `;
                 }
 
-                const newContent = `
+                container.innerHTML = `
                     <h5 style="text-transform: capitalize; margin: 0 0 5px 0;">${issue.report_type.replace('_', ' ')}</h5>
                     <p style="margin: 0 0 10px 0; font-size: 12px;">${issue.description}</p>
                     <img src="${fullImageUrl}" style="width: 100%; border-radius: 4px;" alt="Issue photo"/>
@@ -499,11 +450,14 @@
                         ${agreeHtml ? `<h6>Agreed:</h6><ul class="agree-list" style="padding-left: 20px; margin: 5px 0;">${agreeHtml}</ul>` : ''}
                         ${disagreeHtml ? `<h6>Disagreed:</h6><ul class="disagree-list" style="padding-left: 20px; margin: 5px 0;">${disagreeHtml}</ul>` : ''}
                     </div>`;
-                    
-                container.innerHTML = newContent;
+                
                 const form = container.querySelector('.comment-form');
-                if (form) { form.addEventListener('submit', handleCommentSubmit); }
-            } catch (error) { container.innerHTML = `Error loading details: ${error.message}`; }
+                if (form) {
+                    form.addEventListener('submit', handleCommentSubmit);
+                }
+            } catch (error) {
+                container.innerHTML = `Error loading details: ${error.message}`;
+            }
         }
 
         async function handleCommentSubmit(event) {
@@ -518,7 +472,7 @@
 
             const currentCountMatch = originalButtonText.match(/\((\d+)\)/);
             if (!currentCountMatch) {
-                console.error("Could not parse comment count from button text:", originalButtonText);
+                console.error("Could not parse comment count:", originalButtonText);
                 return;
             }
             const currentCount = parseInt(currentCountMatch[1], 10);
@@ -527,9 +481,22 @@
             submitterButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
             try {
-                const payload = { user_id: 1, comment_text: commentText || (vote === 'agree' ? 'I agree with this report.' : 'I disagree with this report.'), vote: vote };
-                const response = await fetch(`${API_BASE_URL}/api/v1/reports/${reportId}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.detail || "Failed to submit comment."); }
+                const payload = {
+                    user_id: 1, 
+                    comment_text: commentText || (vote === 'agree' ? 'I agree with this report.' : 'I disagree with this report.'),
+                    vote: vote
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/v1/reports/${reportId}/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || "Failed to submit comment.");
+                }
                 
                 const newComment = await response.json();
 
@@ -561,8 +528,9 @@
             }
         }
         
-        // --- 4. APP LOGIC (GEO-INTEL & JALANSAFE) ---
-
+        // =========================================================================
+        // --- 4. CORE APPLICATION LOGIC ---
+        // =========================================================================
         function switchMainMode(mode) {
             if (currentMainMode === mode) return;
             currentMainMode = mode;
@@ -590,10 +558,12 @@
                     .then(data => {
                         const locationName = data.display_name || `Area @ ${lat.toFixed(2)}, ${lng.toFixed(2)}`;
                         triggerGeoIntelAnalysis(lat, lng, locationName);
-                    }).catch(() => triggerGeoIntelAnalysis(lat, lng, `Area @ ${lat.toFixed(2)}, ${lng.toFixed(2)}`));
+                    })
+                    .catch(() => triggerGeoIntelAnalysis(lat, lng, `Area @ ${lat.toFixed(2)}, ${lng.toFixed(2)}`));
             }
         }
         
+        // --- Geo-Intel Specific Logic ---
         function switchGeoIntelMode(mode) {
             currentGeoIntelMode = mode;
             document.getElementById('switch-flood').classList.toggle('active', mode === 'flood');
@@ -616,7 +586,9 @@
                     clickMarker = L.marker([sLat, sLon]).addTo(map);
                     map.setView([sLat, sLon], 11);
                     triggerGeoIntelAnalysis(sLat, sLon, display_name);
-                } else { throw new Error(`Location "${query}" not found.`); }
+                } else {
+                    throw new Error(`Location "${query}" not found.`);
+                }
             } catch (e) {
                 hideStatus();
                 ui.resultPanel.innerHTML = `<p style="padding: 15px; text-align: center;">Error: ${e.message}</p>`;
@@ -632,6 +604,7 @@
                 if (!submitResponse.ok) throw new Error(`API submit failed with status ${submitResponse.status}`);
                 const submitData = await submitResponse.json();
                 const statusUrl = `${API_BASE_URL}${submitData.status_endpoint}`;
+                
                 const pollStatus = async (url) => {
                     const statusResponse = await fetch(url, { headers: { "ngrok-skip-browser-warning": "true" } });
                     const statusData = await statusResponse.json();
@@ -639,12 +612,16 @@
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     return pollStatus(url);
                 };
+                
                 const finalResult = await pollStatus(statusUrl);
                 hideStatus();
+
                 if (finalResult.status === "COMPLETED") {
                     finalResult.request_data.locationName = locationName;
                     displayGeoIntelResults(finalResult);
-                } else { throw new Error(finalResult.result.error || "Analysis task failed."); }
+                } else {
+                    throw new Error(finalResult.result.error || "Analysis task failed.");
+                }
             } catch (e) {
                 hideStatus();
                 ui.resultPanel.innerHTML = `<div class="location-title">${locationName}</div><div class="evidence-details"><p><strong>Error:</strong> ${e.message}</p></div>`;
@@ -655,18 +632,40 @@
         function displayGeoIntelResults(data) {
             const { result, request_data } = data;
             const locationName = request_data.locationName || 'Selected Area';
+            
             if (result.analysis_type === 'flood') {
                 const { risk_assessment, weather_forecast } = result;
-                ui.resultPanel.innerHTML = `<div class="location-title">${locationName}</div><div class="risk-summary risk-${risk_assessment.risk_level.toLowerCase()}"><h2>${risk_assessment.risk_level} Risk</h2><p>Confidence: ${risk_assessment.confidence}</p></div><div class="evidence-details"><p>${risk_assessment.summary.replace(/\*\*/g, "<strong>")}</p><h4><i class="fa-solid fa-satellite-dish"></i> Historical Vulnerability (SAR)</h4><p>${risk_assessment.evidence.historical_vulnerability}</p><h4><i class="fa-solid fa-cloud-sun-rain"></i> Future Threat (Weather)</h4><p>${risk_assessment.evidence.future_threat}</p></div>`;
+                ui.resultPanel.innerHTML = `
+                    <div class="location-title">${locationName}</div>
+                    <div class="risk-summary risk-${risk_assessment.risk_level.toLowerCase()}">
+                        <h2>${risk_assessment.risk_level} Risk</h2><p>Confidence: ${risk_assessment.confidence}</p>
+                    </div>
+                    <div class="evidence-details">
+                        <p>${risk_assessment.summary.replace(/\*\*/g, "<strong>")}</p>
+                        <h4><i class="fa-solid fa-satellite-dish"></i> Historical Vulnerability (SAR)</h4><p>${risk_assessment.evidence.historical_vulnerability}</p>
+                        <h4><i class="fa-solid fa-cloud-sun-rain"></i> Future Threat (Weather)</h4><p>${risk_assessment.evidence.future_threat}</p>
+                    </div>`;
+
                 if (weather_forecast && weather_forecast.success) {
                     ui.forecastPanel.classList.add('visible');
                     populateForecastPanel(weather_forecast);
                 }
+
             } else if (result.analysis_type === 'deforestation') {
                 const { analysis_report } = result;
-                ui.resultPanel.innerHTML = `<div class="location-title">${locationName}</div><div class="risk-summary" style="background-color: #d9534f;"><h2>${analysis_report.area_sq_km} sq km</h2><p>Potential Deforestation</p></div><div class="evidence-details"><p>${analysis_report.story.summary}</p><h4><i class="fa-solid fa-ruler-combined"></i> Analysis Details</h4><p>${analysis_report.story.evidence[0].finding}</p><h4><i class="fa-solid fa-calendar-days"></i> Data Period</h4><p>${analysis_report.story.evidence[1].finding}</p></div>`;
+                ui.resultPanel.innerHTML = `
+                    <div class="location-title">${locationName}</div>
+                    <div class="risk-summary" style="background-color: #d9534f;">
+                        <h2>${analysis_report.area_sq_km} sq km</h2><p>Potential Deforestation</p>
+                    </div>
+                    <div class="evidence-details">
+                        <p>${analysis_report.story.summary}</p>
+                        <h4><i class="fa-solid fa-ruler-combined"></i> Analysis Details</h4><p>${analysis_report.story.evidence[0].finding}</p>
+                        <h4><i class="fa-solid fa-calendar-days"></i> Data Period</h4><p>${analysis_report.story.evidence[1].finding}</p>
+                    </div>`;
                 ui.forecastPanel.classList.remove('visible');
             }
+
             ui.resultPanel.classList.add('visible');
             activateAnalysisLayers(result);
         }
@@ -692,31 +691,88 @@
             if (activeLayers.sar) { map.addLayer(activeLayers.sar); if (sarItem) sarItem.classList.add("active"); }
             if (activeLayers.aoi) map.fitBounds(activeLayers.aoi.getBounds(), { padding: [50, 50] });
         }
+        
+        // --- JalanSafe Specific Logic ---
+        async function handleUseCurrentLocation() {
+            const btn = document.getElementById('use-current-location-btn');
+            const startInput = ui.startLocationInput;
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            startInput.value = 'Getting your location...';
+            startInput.disabled = true;
 
-        async function handleRouteSearch() {
-            const startName = ui.startLocationInput.value;
-            const endName = ui.endLocationInput.value;
-            if (!startName || !endName) { alert('Please enter both a start and end location.'); return; }
-            showStatus(`Finding routes from "${startName}" to "${endName}"...`);
-            navigator.geolocation.getCurrentPosition( (position) => {
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                        enableHighAccuracy: true, timeout: 10000, maximumAge: 0 
+                    });
+                });
+
                 const { latitude, longitude } = position.coords;
-                fetchRoutes({ start_name: startName, end_name: endName, current_lat: latitude, current_lon: longitude });
-            }, (error) => {
-                console.warn(`Could not get GPS location: ${error.message}.`);
-                alert('Could not get your current location. Search results may be less accurate.');
-                fetchRoutes({ start_name: startName, end_name: endName });
-            });
+                startInput.dataset.lat = latitude;
+                startInput.dataset.lon = longitude;
+
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`);
+                if (!response.ok) throw new Error("Reverse geocoding failed.");
+                
+                const data = await response.json();
+                startInput.value = data.display_name || `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+
+            } catch (error) {
+                console.error("Error getting current location:", error);
+                alert(`Could not get your location: ${error.message}. Please check browser permissions.`);
+                startInput.value = '';
+                delete startInput.dataset.lat;
+                delete startInput.dataset.lon;
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+                startInput.disabled = false;
+            }
         }
 
-        async function fetchRoutes(payload) {
+        async function handleRouteSearch() {
+            const startInput = ui.startLocationInput;
+            const endInput = ui.endLocationInput;
+            const endName = endInput.value;
+
+            if (!startInput.value || !endName) {
+                alert('Please provide both a start and end location.');
+                return;
+            }
+
+            if (startInput.dataset.lat && startInput.dataset.lon) {
+                showStatus(`Finding routes from your location to "${endName}"...`);
+                const payload = {
+                    start_lat: parseFloat(startInput.dataset.lat),
+                    start_lon: parseFloat(startInput.dataset.lon),
+                    end_name: endName
+                };
+                await fetchRoutes('/api/v1/routes/from-current-location', payload);
+            } else {
+                const startName = startInput.value;
+                showStatus(`Finding routes from "${startName}" to "${endName}"...`);
+                const payload = { start_name: startName, end_name: endName };
+                await fetchRoutes('/api/v1/routes/by-name', payload);
+            }
+        }
+
+        async function fetchRoutes(endpoint, payload) {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/routes/by-name`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                
                 if (!response.ok) {
                     const errorData = await response.json();
                     let userFriendlyMessage = errorData.detail || `Server returned status ${response.status}`;
-                    if (response.status === 404) { userFriendlyMessage = `Sorry, we couldn't find a route. Please try using more specific location names, like "Unicity Shopping Mall, Sibu". One of the locations might be outside the serviceable area.`; }
+                    if (response.status === 404) { 
+                        userFriendlyMessage = `Sorry, we couldn't find a route. Please try using more specific location names.`; 
+                    }
                     throw new Error(userFriendlyMessage);
                 }
+                
                 const routes = await response.json();
                 displayRoutes(routes);
             } catch (error) {
@@ -729,54 +785,179 @@
         
         function displayRoutes(routes) {
             clearRouteLayers();
-            ui.routeResultsPanel.innerHTML = '';
+            const resultsPanel = ui.routeResultsPanel;
+            resultsPanel.innerHTML = '';
             activeLayers.routes = {};
-            if (!Array.isArray(routes) || routes.length === 0) { ui.routeResultsPanel.innerHTML = '<p>No valid routes found.</p>'; return; }
+
+            if (!Array.isArray(routes) || routes.length === 0) {
+                resultsPanel.innerHTML = '<p>No valid routes found.</p>';
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
             routes.forEach((route, index) => {
                 const item = document.createElement('div');
                 item.className = `route-item ${route.color}`;
-                item.innerHTML = `<h5>Route ${index + 1}</h5><p>Time: ~${Math.round(route.base_travel_time / 60)} mins | Distance: ${(route.distance / 1000).toFixed(1)} km</p>`;
+                item.dataset.routeId = route.id;
+                
+                const userCountText = route.user_count > 0 ? `| <i class="fa-solid fa-users"></i> ${route.user_count}` : '';
+                item.innerHTML = `<h5>Route ${index + 1}</h5><p>Time: ~${Math.round(route.base_travel_time / 60)} mins | Distance: ${(route.distance / 1000).toFixed(1)} km ${userCountText}</p>`;
+                
                 const decodedCoords = decodePolyline(route.geometry);
                 const latlngs = decodedCoords.map(c => [c[0], c[1]]);
                 const routeLine = L.polyline(latlngs, { color: getRouteColorHex(route.color), weight: 6, opacity: 0.5 });
+                
                 activeLayers.routes[route.id] = { line: routeLine, data: route, index: index + 1 };
                 routeLayers.addLayer(routeLine);
-                item.addEventListener('click', () => { showRouteDetails(route.id); });
-                ui.routeResultsPanel.appendChild(item);
+                fragment.appendChild(item);
             });
-            if (routeLayers.getLayers().length > 0) { map.fitBounds(routeLayers.getBounds(), { padding: [50, 50] }); }
+
+            resultsPanel.appendChild(fragment);
+
+            if (routeLayers.getLayers().length > 0) {
+                map.fitBounds(routeLayers.getBounds(), { padding: [50, 50] });
+            }
         }
 
         function showRouteDetails(routeId) {
             for (const id in activeLayers.routes) {
                 const routeObj = activeLayers.routes[id];
-                routeObj.line.setStyle({ opacity: (id === routeId ? 1 : 0.4), weight: (id === routeId ? 8 : 5) });
-                if (id === routeId) routeObj.line.bringToFront();
+                const isSelected = id === routeId;
+                routeObj.line.setStyle({ opacity: isSelected ? 1 : 0.4, weight: isSelected ? 8 : 5 });
+                if (isSelected) {
+                    routeObj.line.bringToFront();
+                }
             }
+
             const selectedRoute = activeLayers.routes[routeId];
             if (!selectedRoute) return;
+
             const { data, index } = selectedRoute;
+
+            // Generate all content based on raw data
+            const allRoutes = Object.values(activeLayers.routes).map(r => r.data);
+            const aiExplanation = generateAIExplanation(data, allRoutes);
             const arrivalTime = new Date(Date.now() + data.base_travel_time * 1000);
             const etaString = arrivalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            function scoreToWord(score) { if (score === null || score === undefined) return "data unavailable"; if (score >= 90) return "Excellent"; if (score >= 75) return "Good"; if (score >= 50) return "Moderate"; return "Poor"; }
-            const trafficText = scoreToWord(data.traffic_score);
-            const qualityText = scoreToWord(data.road_quality_score);
-            let explanation = '';
-            if (data.color === 'green') { explanation = `This is our top recommendation. Our AI assesses the traffic flow as <strong>${trafficText}</strong> and road quality as <strong>${qualityText}</strong>.`; } else if (data.color === 'yellow') { explanation = `This is a decent alternative. Its rating is slightly lower, with <strong>${trafficText}</strong> traffic and <strong>${qualityText}</strong> road quality.`; } else { explanation = `We advise against this route. It has a low overall rating, likely due to <strong>${trafficText}</strong> traffic flow and <strong>${qualityText}</strong> road quality.`; }
-            let evidenceHtml = '';
-            if (data.issues && data.issues.length > 0) {
-                const issue = data.issues[0];
-                const fixedPhotoUrl = issue.photo_url.replace(/\\/g, '/');
-                const imageUrl = fixedPhotoUrl.startsWith('http') ? fixedPhotoUrl : `${API_BASE_URL}/${fixedPhotoUrl}`;
-                evidenceHtml = `<h4><i class="fa-solid fa-triangle-exclamation"></i> Detected Issue on Route</h4><p><strong>Description:</strong> ${issue.description}</p><img src="${imageUrl}" alt="Photo of reported issue" style="width: 100%; border-radius: 8px; margin-top: 10px;"/>`;
-            } else { evidenceHtml = `<h4><i class="fa-solid fa-check-circle"></i> No Major Issues Reported</h4><p>Our system has not detected any significant user-reported issues like potholes or damages on this route.</p>`; }
+            const evidenceHtml = generateEvidenceHtml(data.issues);
+            
+            // Populate the modal
             const modalContent = ui.routeDetailsModal.querySelector('#route-details-content');
             ui.routeDetailsModal.querySelector('#route-details-title').innerText = `Details for Route ${index}`;
-            modalContent.innerHTML = `<p><strong>Estimated Arrival:</strong> ${etaString}</p><h4>Why this rating? (AI Explanation)</h4><p>${explanation}</p>${evidenceHtml}<button id="start-nav-btn" style="width: 100%; border: none; background: #28a745; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px; margin-top: 20px;">Start Navigation</button>`;
+            
+            modalContent.innerHTML = `
+                <p><strong>Estimated Arrival:</strong> ${etaString}</p>
+                <h4>Why this rating? (AI Explanation)</h4>
+                <p>${aiExplanation}</p>
+                ${evidenceHtml} 
+                <button id="start-nav-btn" data-route-hash="${data.id}" style="width: 100%; border: none; background: #28a745; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px; margin-top: 20px;">Start Navigation</button>
+            `;
+            
             ui.routeDetailsModal.classList.remove('hidden');
-            modalContent.querySelector('#start-nav-btn').addEventListener('click', () => { alert(`Simulating navigation start for Route ${index}...`); ui.routeDetailsModal.classList.add('hidden'); });
+            
+            modalContent.querySelector('#start-nav-btn').addEventListener('click', (event) => handleStartNavigation(event, index));
         }
         
+        // --- JalanSafe Helper Functions ---
+
+        function generateAIExplanation(routeData, allRoutes) {
+            // Find the route with the highest score (The "Winner")
+            // Note: allRoutes is already sorted by score from backend, so allRoutes[0] is the best.
+            const bestRoute = allRoutes[0];
+            const isBestOption = (routeData.id === bestRoute.id);
+            
+            const userCount = routeData.active_users;
+            const issueCount = routeData.issues.length;
+            const timeSlower = Math.round(routeData.time_slower / 60);
+            
+            let title = "";
+            let analysis = "";
+
+            // --- SCENARIO 1: This is the BEST option calculated by AI ---
+            if (isBestOption) {
+                if (routeData.color === 'green') {
+                    title = "🌟 <strong>Top Recommendation:</strong> Fastest & Safest.";
+                    analysis = "This route has the best balance of speed and safety.";
+                } else if (routeData.color === 'yellow') {
+                    title = "✅ <strong>Best Available Option:</strong>";
+                    analysis = `Traffic is building up (${userCount} users), but this is still your best choice compared to others.`;
+                } else {
+                    // Even if it's red, if it's the best we have...
+                    title = "⚠️ <strong>Best of a Bad Situation:</strong>";
+                    analysis = `All routes are congested or hazardous. This route is calculated to be the least painful option despite having ${userCount} users.`;
+                }
+            } 
+            // --- SCENARIO 2: This is NOT the best option ---
+            else {
+                const scoreDiff = bestRoute.final_score - routeData.final_score;
+                
+                if (routeData.color === 'red') {
+                    title = "⛔ <strong>Not Recommended:</strong>";
+                    // Specific comparisons
+                    if (userCount > bestRoute.active_users + 5) {
+                        analysis = `<strong>Significantly more congested</strong> than the best route (has ${userCount - bestRoute.active_users} more users).`;
+                    } else if (issueCount > bestRoute.issues.length) {
+                        analysis = `Contains <strong>more road hazards</strong> than the recommended route.`;
+                    } else {
+                        analysis = `Overall analysis shows this route is inferior due to a combination of traffic and distance.`;
+                    }
+                } else {
+                    title = "⚠️ <strong>Alternative Option:</strong>";
+                    analysis = `A viable backup, but approx. <strong>${timeSlower} mins slower</strong> than the top recommendation.`;
+                }
+            }
+
+            // --- Build Detail List ---
+            let details = [];
+            // Traffic Context
+            if (userCount === 0) details.push(`✅ Traffic: Clear`);
+            else if (userCount < 5) details.push(`⚠️ Traffic: Light (${userCount} active users)`);
+            else if (userCount < 10) details.push(`🟠 Traffic: Moderate (${userCount} active users)`);
+            else details.push(`🛑 Traffic: Heavy (${userCount} active users)`);
+
+            // Issue Context
+            if (issueCount > 0) details.push(`🛑 Hazards: ${issueCount} reported issues (See below)`);
+            else details.push(`✅ Hazards: None reported`);
+
+            return `
+                <div style="margin-bottom:8px; border-bottom:1px solid #444; padding-bottom:5px;">${title}</div>
+                <div style="font-size:13px; margin-bottom:8px;">${analysis}</div>
+                <ul style="padding-left:20px; margin:0; color:#bbb; font-size:12px;">
+                    ${details.map(d => `<li>${d}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        function generateEvidenceHtml(issues) {
+            if (!Array.isArray(issues) || issues.length === 0) {
+                return `<h4><i class="fa-solid fa-check-circle"></i> No Major Issues Reported</h4><p>Our system has not detected any significant user-reported issues on this route.</p>`;
+            }
+
+            let html = `<h4><i class="fa-solid fa-triangle-exclamation"></i> Detected Issue(s) on Route</h4>`;
+            issues.forEach(issue => {
+                const fixedPhotoUrl = (issue.photo_url || '').replace(/\\/g, '/');
+                const imageUrl = fixedPhotoUrl.startsWith('http') ? fixedPhotoUrl : `${API_BASE_URL}/${fixedPhotoUrl}`;
+                html += `
+                    <div style="margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px;">
+                        <p><strong>Description:</strong> ${issue.description || 'No description'}</p>
+                        <img src="${imageUrl}" alt="Photo of reported issue" style="width: 100%; border-radius: 8px; margin-top: 10px;"/>
+                    </div>`;
+            });
+            return html;
+        }
+
+        async function handleStartNavigation(event, routeIndex) {
+            const routeHash = event.target.dataset.routeHash;
+            try {
+                const payload = { user_id: 1, chosen_route_hash: routeHash };
+                const response = await fetch(`${API_BASE_URL}/api/v1/routes/choose`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (response.ok) { console.log("Successfully logged route choice."); }
+            } catch (error) { console.error("Error logging route choice:", error); }
+            alert(`Simulating navigation start for Route ${routeIndex}... Your choice will affect future recommendations.`);
+            ui.routeDetailsModal.classList.add('hidden');
+        }
+
         async function handleReportButtonClick() {
             if (currentMainMode !== 'jalansafe') { switchMainMode('jalansafe'); }
             showStatus("Getting your current location...");
@@ -790,7 +971,7 @@
                 alert('Could not get your current location. Please ensure location services are enabled for your browser.');
             }, { enableHighAccuracy: true });
         }
-
+        
         async function openReportModal(lat, lon) {
             ui.reportModal.classList.remove('hidden');
             document.getElementById('report-address').textContent = `Coords: ${lat.toFixed(5)}, ${lon.toFixed(5)}. Fetching...`;
@@ -810,9 +991,9 @@
             const formData = new FormData();
             formData.append('photo', document.getElementById('report-photo').files[0]);
             formData.append('user_id', 1);
-            formData.append('latitude', ui.reportForm.dataset.lat); 
+            formData.append('latitude', ui.reportForm.dataset.lat);
             formData.append('longitude', ui.reportForm.dataset.lon);
-            formData.append('report_type', document.getElementById('report-type').value); 
+            formData.append('report_type', document.getElementById('report-type').value);
             formData.append('description', document.getElementById('report-description').value);
             showStatus('Submitting report...');
             try {
@@ -821,10 +1002,9 @@
                 alert('Report submitted successfully!');
                 ui.reportModal.classList.add('hidden');
                 ui.reportForm.reset();
-                issuesData = null;
+                issuesData = null; 
                 const issuesLayerButton = document.querySelector('.layer-item[data-layer-id="issues"]');
                 if (issuesLayerButton && issuesLayerButton.classList.contains('active')) {
-                    await toggleIssuesLayer();
                     await toggleIssuesLayer();
                 }
             } catch (error) {
@@ -843,7 +1023,10 @@
                 if (!response.ok) throw new Error('Failed to load leaderboard.');
                 const data = await response.json();
                 list.innerHTML = '';
-                if (data.length === 0) { list.innerHTML = '<p>No contributors yet.</p>'; return; }
+                if (data.length === 0) {
+                    list.innerHTML = '<p>No contributors yet.</p>';
+                    return;
+                }
                 data.forEach((user, index) => {
                     const item = document.createElement('div');
                     item.className = 'leaderboard-item';
@@ -855,33 +1038,18 @@
             }
         }
         
+        // =========================================================================
         // --- 5. UTILITY & HELPER FUNCTIONS ---
-
+        // =========================================================================
         function getRouteColorHex(c) { if (c === 'green') return '#28a745'; if (c === 'yellow') return '#ffc107'; if (c === 'red') return '#dc3545'; return '#888'; }
         function clearRouteLayers() { routeLayers.clearLayers(); }
         function showStatus(msg) { const o = document.getElementById('status-overlay'); o.innerHTML = `<div class="loader"></div> ${msg}`; o.style.display = 'flex'; }
         function hideStatus() { document.getElementById('status-overlay').style.display = 'none'; }
-        function showActionTooltip(msg) { const t=document.getElementById("action-tooltip"); if(!t)return; t.textContent=msg; t.style.opacity="1"; t.style.transform="translateY(0)"; setTimeout(()=>{t.style.opacity="0";t.style.transform="translateY(-20px)"},3e3); }
-        function decodePolyline(encoded) { let points=[],index=0,len=encoded.length,lat=0,lng=0;while(index<len){let b,shift=0,result=0;do{b=encoded.charCodeAt(index++)-63;result|=(b&0x1f)<<shift;shift+=5}while(b>=0x20);let dlat=((result&1)?~(result>>1):(result>>1));lat+=dlat;shift=0;result=0;do{b=encoded.charCodeAt(index++)-63;result|=(b&0x1f)<<shift;shift+=5}while(b>=0x20);let dlng=((result&1)?~(result>>1):(result>>1));lng+=dlng;points.push([lat/1E5,lng/1E5])}return points }
+        function showActionTooltip(msg) { const t=document.getElementById("action-tooltip"); if(!t)return; t.textContent=msg; t.style.opacity="1"; t.style.transform="translateY(0)"; setTimeout(()=>{t.style.opacity="0";t.style.transform="translateY(-20px)"},3000); }
+        function decodePolyline(encoded) { let points = [], index = 0, len = encoded.length, lat = 0, lng = 0; while (index < len) { let b, shift = 0, result = 0; do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20); let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1)); lat += dlat; shift = 0; result = 0; do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20); let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1)); lng += dlng; points.push([lat / 1E5, lng / 1E5]); } return points; }
+        function resetDashboard() { ui.resultPanel.classList.remove('visible'); ui.forecastPanel.classList.remove('visible'); if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null; } clearRouteLayers(); if (activeLayers.routes) activeLayers.routes = {}; if (activeLayers.sar) { map.removeLayer(activeLayers.sar); activeLayers.sar = null; } if (activeLayers.aoi) { map.removeLayer(activeLayers.aoi); activeLayers.aoi = null; } document.querySelectorAll('.layer-item').forEach(item => { const id = item.dataset.layerId; if (id === 'sar' || id === 'aoi') { item.classList.add('inactive'); if (id === 'sar') item.innerHTML = `<i class="fa-solid fa-layer-group"></i> Analysis Layer`; } }); }
         
-        function resetDashboard() {
-            ui.resultPanel.classList.remove('visible');
-            ui.forecastPanel.classList.remove('visible');
-            if (clickMarker) map.removeLayer(clickMarker);
-            clickMarker = null;
-            clearRouteLayers();
-            if (activeLayers.routes) activeLayers.routes = {};
-            if (activeLayers.sar) { map.removeLayer(activeLayers.sar); activeLayers.sar = null; }
-            if (activeLayers.aoi) { map.removeLayer(activeLayers.aoi); activeLayers.aoi = null; }
-            document.querySelectorAll('.layer-item').forEach(item => {
-                const id = item.dataset.layerId;
-                if (id === 'sar' || id === 'aoi') {
-                    item.classList.add('inactive');
-                    if (id === 'sar') item.innerHTML = `<i class="fa-solid fa-layer-group"></i> Analysis Layer`;
-                }
-            });
-        }
-        
+        // --- Weather and Radar Functions ---
         async function startRadarAnimation() {
             showActionTooltip("Loading live radar...");
             try {
@@ -898,11 +1066,19 @@
         function runRadarAnimation() {
             if (!radarData || !document.getElementById('radar-play-button')) return;
             stopRadarAnimation();
-            const localRadarLayers = radarData.radar.nowcast.map(frame => L.tileLayer(radarData.host + frame.path + "/512/{z}/{x}/{y}/2/1_1.png", { opacity: 0, zIndex: frame.time }));
+            
+            const localRadarLayers = radarData.radar.nowcast.map(frame => 
+                L.tileLayer(radarData.host + frame.path + "/512/{z}/{x}/{y}/2/1_1.png", { 
+                    opacity: 0, 
+                    zIndex: frame.time 
+                })
+            );
+
             let currentIndex = localRadarLayers.length - 1;
             const playButton = document.getElementById('radar-play-button');
             const slider = document.getElementById('radar-slider');
             const timestamp = document.getElementById('radar-timestamp');
+
             function showFrame(index) {
                 if (index < 0 || index >= localRadarLayers.length) return;
                 localRadarLayers.forEach((layer, i) => {
@@ -917,6 +1093,7 @@
                 timestamp.textContent = frameTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
                 slider.value = index;
             }
+
             function play() {
                 playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
                 radarAnimation = setInterval(() => {
@@ -924,6 +1101,7 @@
                     showFrame(currentIndex);
                 }, 500);
             }
+
             playButton.onclick = () => {
                 if (radarAnimation) {
                     clearInterval(radarAnimation);
@@ -933,6 +1111,7 @@
                     play();
                 }
             };
+            
             slider.max = localRadarLayers.length - 1;
             slider.oninput = e => {
                 if (radarAnimation) { clearInterval(radarAnimation); radarAnimation = null; }
@@ -940,6 +1119,7 @@
                 currentIndex = parseInt(e.target.value, 10);
                 showFrame(currentIndex);
             };
+
             document.getElementById('radar-timeline-panel').style.display = 'flex';
             showFrame(currentIndex);
             activeLayers.radar = localRadarLayers;
@@ -949,7 +1129,7 @@
             clearInterval(radarAnimation);
             radarAnimation = null;
             const playButton = document.getElementById('radar-play-button');
-            if(playButton) playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+            if (playButton) playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
             if (activeLayers.radar) {
                 activeLayers.radar.forEach(layer => {
                     if (map.hasLayer(layer)) map.removeLayer(layer);
@@ -962,18 +1142,27 @@
         async function updateLiveTemperatures() {
             if (!OWM_API_KEY) return;
             clearTimeout(debounceTimer);
+
             debounceTimer = setTimeout(async () => {
                 const center = map.getCenter();
                 try {
                     const response = await fetch(`https://api.openweathermap.org/data/2.5/find?lat=${center.lat}&lon=${center.lng}&cnt=50&appid=${OWM_API_KEY}&units=metric`);
                     if (!response.ok) return;
                     const data = await response.json();
+                    
                     temperatureLayerGroup.clearLayers();
-                    if (data.list) data.list.forEach(item => {
-                        const icon = L.divIcon({ className: "temperature-label", html: `<div>${Math.round(item.main.temp)}°</div><span class="city-name">${item.name}</span>` });
-                        L.marker([item.coord.lat, item.coord.lon], { icon }).addTo(temperatureLayerGroup);
-                    });
-                } catch (e) { console.error("Failed to fetch live temperatures:", e); }
+                    if (data.list) {
+                        data.list.forEach(item => {
+                            const icon = L.divIcon({ 
+                                className: "temperature-label", 
+                                html: `<div>${Math.round(item.main.temp)}°</div><span class="city-name">${item.name}</span>` 
+                            });
+                            L.marker([item.coord.lat, item.coord.lon], { icon }).addTo(temperatureLayerGroup);
+                        });
+                    }
+                } catch (e) { 
+                    console.error("Failed to fetch live temperatures:", e); 
+                }
             }, 500);
         }
         
@@ -989,52 +1178,76 @@
             return 'fa-solid fa-question';
         }
         
-        function populateForecastPanel(e) {
-            if (!e || !e.success) return;
-            fullForecastData = e.data;
-            const t = document.getElementById("daily-forecast-container");
-            if (!t) return;
-            t.innerHTML = "";
-            fullForecastData.daily.time.forEach((e, a) => {
-                const l = document.createElement("div");
-                l.className = "day-forecast";
-                l.dataset.dayIndex = a;
-                const s = (new Date(e)).toLocaleDateString("en-US", { weekday: "short" });
-                l.innerHTML = `<div class="day-name">${a === 0 ? "Today" : s}</div><i class="weather-icon ${getWeatherIconClass(fullForecastData.daily.weathercode[a])}"></i><div class="temp-range">${Math.round(fullForecastData.daily.temperature_2m_max[a])}°/${Math.round(fullForecastData.daily.temperature_2m_min[a])}°</div>`;
-                l.addEventListener("click", () => {
-                    document.querySelectorAll(".day-forecast").forEach(el => el.classList.remove("active"));
-                    l.classList.add("active");
-                    showHourlyForecast(a);
+        function populateForecastPanel(forecast) {
+            if (!forecast || !forecast.success) return;
+            fullForecastData = forecast.data;
+            const dailyContainer = document.getElementById("daily-forecast-container");
+            if (!dailyContainer) return;
+            
+            dailyContainer.innerHTML = "";
+            fullForecastData.daily.time.forEach((dateStr, index) => {
+                const dayDiv = document.createElement("div");
+                dayDiv.className = "day-forecast";
+                dayDiv.dataset.dayIndex = index;
+                
+                const date = new Date(dateStr);
+                const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+                
+                dayDiv.innerHTML = `
+                    <div class="day-name">${index === 0 ? "Today" : dayName}</div>
+                    <i class="weather-icon ${getWeatherIconClass(fullForecastData.daily.weathercode[index])}"></i>
+                    <div class="temp-range">
+                        ${Math.round(fullForecastData.daily.temperature_2m_max[index])}°/${Math.round(fullForecastData.daily.temperature_2m_min[index])}°
+                    </div>`;
+
+                dayDiv.addEventListener("click", () => {
+                    document.querySelectorAll(".day-forecast.active").forEach(el => el.classList.remove("active"));
+                    dayDiv.classList.add("active");
+                    showHourlyForecast(index);
                 });
-                t.appendChild(l);
+
+                dailyContainer.appendChild(dayDiv);
             });
-            if (t.firstChild) t.firstChild.click();
+
+            if (dailyContainer.firstChild) {
+                dailyContainer.firstChild.click();
+            }
         }
         
-        function showHourlyForecast(e) {
-            const t = document.getElementById("hourly-forecast-container");
-            if (!t) return;
+        function showHourlyForecast(dayIndex) {
+            const hourlyContainer = document.getElementById("hourly-forecast-container");
+            if (!hourlyContainer) return;
             if (!fullForecastData.hourly) {
-                t.innerHTML = '<p>Hourly data not available.</p>';
-                t.classList.add("visible");
+                hourlyContainer.innerHTML = '<p>Hourly data not available.</p>';
+                hourlyContainer.classList.add("visible");
                 return;
             }
-            t.innerHTML = "";
-            const a = 24 * e;
-            const l = a + 24;
-            const s = fullForecastData.hourly.time.slice(a, l);
-            const o = fullForecastData.hourly.temperature_2m.slice(a, l);
-            s.forEach((e, r) => {
-                const n = document.createElement("div");
-                n.className = "hour-forecast";
-                const i = (new Date(e)).getHours();
-                n.innerHTML = `<div class="hour-time">${i}:00</div><i class="weather-icon ${getWeatherIconClass(fullForecastData.hourly.weathercode[a + r])}"></i><div class="hour-temp">${Math.round(o[r])}°</div>`;
-                t.appendChild(n);
+
+            hourlyContainer.innerHTML = "";
+            const startIndex = 24 * dayIndex;
+            const endIndex = startIndex + 24;
+
+            const timeSlice = fullForecastData.hourly.time.slice(startIndex, endIndex);
+            const tempSlice = fullForecastData.hourly.temperature_2m.slice(startIndex, endIndex);
+            
+            timeSlice.forEach((dateStr, i) => {
+                const hourDiv = document.createElement("div");
+                hourDiv.className = "hour-forecast";
+                const hour = new Date(dateStr).getHours();
+                
+                hourDiv.innerHTML = `
+                    <div class="hour-time">${hour}:00</div>
+                    <i class="weather-icon ${getWeatherIconClass(fullForecastData.hourly.weathercode[startIndex + i])}"></i>
+                    <div class="hour-temp">${Math.round(tempSlice[i])}°</div>`;
+
+                hourlyContainer.appendChild(hourDiv);
             });
-            t.classList.add("visible");
+            hourlyContainer.classList.add("visible");
         }
         
+        // =========================================================================
         // --- 6. KICKSTART THE APP ---
+        // =========================================================================
         initializeApp();
     });
     </script>

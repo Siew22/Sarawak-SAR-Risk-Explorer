@@ -1,9 +1,8 @@
 # --------------------------------------------------------------------------
-# --- schemas.py for JalanSafe AI ---
+# --- schemas.py for JalanSafe AI (Final Real-Time Version) ---
 # --------------------------------------------------------------------------
-# This file contains all the Pydantic models used for API data validation
-# and response serialization. They define the "shape" of the data that
-# our API expects to receive and send.
+# This file defines the exact structure of data exchanged between the API
+# and the frontend. It must match services.py exactly.
 # --------------------------------------------------------------------------
 
 from pydantic import BaseModel, Field
@@ -37,14 +36,14 @@ class User(UserBase):
     points: int
 
     class Config:
-        orm_mode = True # This allows the model to be created from an ORM object
+        from_attributes = True
 
 class UserRank(BaseModel):
     username: str
     points: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Report Schemas ---
 
@@ -52,18 +51,16 @@ class ReportTypeEnum(str, Enum):
     road_condition = "road_condition"
     traffic_light = "traffic_light"
 
+# Used inside RouteResult
 class RouteIssue(BaseModel):
-    issue_type: str # Keep as string
     description: str
     photo_url: str
-    latitude: float
-    longitude: float
+    type: str
+    date: str
 
 class ReportBase(BaseModel):
-    # --- ADD these two lines ---
     latitude: float
     longitude: float
-    
     report_type: ReportTypeEnum
     description: str
     quality_score: Optional[int] = None
@@ -71,7 +68,6 @@ class ReportBase(BaseModel):
 class ReportCreate(ReportBase):
     user_id: int
     photo_url: str
-    # latitude 和 longitude 会从 ReportBase 自动继承下来
 
 class Report(ReportBase):
     id: int
@@ -81,7 +77,7 @@ class Report(ReportBase):
     address: Optional[str] = None
     
     class Config:
-        from_attributes = True # Pydantic v2 uses from_attributes instead of orm_mode
+        from_attributes = True
 
 # --- Comment Schemas ---
 
@@ -96,8 +92,7 @@ class Comment(CommentBase):
     id: int
     user_id: int
     created_at: datetime
-    # Add a field to hold the user's info
-    owner: UserInDB # This will nest the user's username in the comment
+    owner: UserInDB
 
     class Config:
         from_attributes = True
@@ -115,22 +110,28 @@ class RouteChoiceCreate(BaseModel):
 class RouteRequestByName(BaseModel):
     start_name: str = Field(..., example="Kuala Lumpur Tower")
     end_name: str = Field(..., example="Petronas Twin Towers")
-    # 添加这两个可选字段
-    current_lat: Optional[float] = Field(None, example=3.1390)
-    current_lon: Optional[float] = Field(None, example=101.6869)
+    current_lat: Optional[float] = Field(None)
+    current_lon: Optional[float] = Field(None)
 
-# --- 在这里添加下面的新模型 ---
 class RouteRequestWithStartCoords(BaseModel):
     start_lat: float
     start_lon: float
     end_name: str
-# --- 添加结束 ---
     
+# --- CRITICAL UPDATE: Matching the Real-Time Logic ---
 class RouteResult(BaseModel):
     id: str
+    geometry: str
     distance: float
     base_travel_time: float
     color: str
-    final_score: float
-    geometry: str
-    # You can add more fields here as needed
+    
+    # New fields for the Real-Time System
+    active_users: int
+    issues: List[RouteIssue]
+    weather: str
+    tags: List[str]
+    is_optimal: bool
+    time_slower: float
+
+    # final_score is removed because we now use direct rule-based logic

@@ -16,3 +16,5 @@ cryptography
 python-decouple
 python-multiple
 geopy
+polyline==2.0.3
+haversine==2.9.0
