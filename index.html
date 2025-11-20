@@ -11,19 +11,21 @@
 
     <style>
         /* --- 1. Basic Layout --- */
-        html, body { height: 100%; width: 100%; margin: 0; padding: 0; background: #1a1a1a; overflow: hidden; }
+        html, body { height: 100%; width: 100%; margin: 0; padding: 0; background: #1a1a1a; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
         #map { position: absolute; top: 0; left: 0; height: 100%; width: 100%; z-index: 1; }
-        .leaflet-container { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #1a1a1a; }
 
         /* --- 2. Floating Panels --- */
         .floating-panel {
             position: absolute; z-index: 1000;
-            background: rgba(30, 30, 30, 0.9);
+            background: rgba(30, 30, 30, 0.95);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             transition: all 0.3s ease; color: #f0f0f0;
         }
+        /* Minimized state for navigation mode */
+        .minimized { display: none !important; }
+
         #control-panel { top: 20px; left: 20px; width: 350px; padding: 20px; }
         #result-panel { top: 220px; left: 20px; width: 350px; max-height: calc(100vh - 240px); padding: 20px; overflow-y: auto; transform: translateX(-120%); transition: transform 0.3s ease; }
         #result-panel.visible { transform: translateX(0); }
@@ -78,7 +80,6 @@
 
         /* --- 7. Modals --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        /* FIX: Ensure modal scrolls if content is long */
         .modal-content { 
             background: #1e1e1e; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; 
             max-height: 85vh; overflow-y: auto; /* Allow scrolling */
@@ -98,13 +99,35 @@
         #report-form select, #report-form textarea, #report-form input { width: 100%; box-sizing: border-box; border: 1px solid #444; padding: 12px; border-radius: 6px; background: #333; color: #fff; font-size: 14px; }
         #report-form button { border: none; background: #0d6efd; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px; }
 
-        /* --- 8. Overlays & Tooltips --- */
+        /* --- 8. Navigation HUD (Heads-Up Display) --- */
+        #nav-hud {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2000; pointer-events: none; 
+        }
+        .nav-top-bar {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #0d6efd; color: white; padding: 15px 25px; border-radius: 30px;
+            font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            pointer-events: auto; display: flex; align-items: center; gap: 15px;
+        }
+        .nav-bottom-bar {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: white; color: black; padding: 15px 30px; border-radius: 12px;
+            display: flex; gap: 20px; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            pointer-events: auto;
+        }
+        .nav-btn-exit { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .nav-info { text-align: center; }
+        .nav-info h2 { margin: 0; font-size: 24px; }
+        .nav-info p { margin: 0; color: #666; font-size: 14px; }
+
+        /* --- 9. Overlays & Tooltips --- */
         #status-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2001; background: rgba(0,0,0,.8); color: #fff; padding: 20px 30px; border-radius: 10px; font-size: 20px; display: none; align-items: center; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1.5s linear infinite; display: inline-block; vertical-align: middle; margin-right: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #action-tooltip { position: absolute; top: 185px; left: 20px; background-color: #0d6efd; color: #fff; padding: 10px 15px; border-radius: 6px; font-size: 14px; z-index: 2001; opacity: 0; transform: translateY(-20px); transition: opacity .3s ease, transform .3s ease; pointer-events: none; }
 
-        /* --- 9. Layer List --- */
+        /* --- 10. Layer List --- */
         .layer-list { list-style: none; padding: 0; margin: 0; }
         .layer-item { padding: 12px 15px; margin: 5px 0; border-radius: 6px; cursor: pointer; transition: background-color .2s ease; display: flex; align-items: center; }
         .layer-item:hover { background-color: rgba(255,255,255,.1); }
@@ -112,7 +135,7 @@
         .layer-item.inactive { color: #888; cursor: pointer; background-color: transparent !important; }
         .layer-item i { margin-right: 15px; width: 20px; text-align: center; }
 
-        /* --- 10. Radar & Weather --- */
+        /* --- 11. Radar & Weather --- */
         #radar-timeline-panel { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(30,30,30,.85); padding: 10px 15px; border-radius: 8px; display: none; align-items: center; width: 50%; max-width: 600px; }
         #radar-play-button { background: 0 0; border: none; color: #fff; font-size: 20px; cursor: pointer; margin-right: 10px; }
         #radar-timestamp { font-size: 14px; font-weight: 700; min-width: 80px; text-align: center; }
@@ -129,12 +152,17 @@
         .hour-forecast .hour-temp { font-size: 18px; margin: 5px 0; }
         .issue-marker-icon { text-align: center; }
         
+        /* Custom Markers */
+        .start-marker-icon { color: #28a745; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        .end-marker-icon { color: #dc3545; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        
         @keyframes fadeIn { from { opacity: 0; background-color: rgba(40, 167, 69, 0.3); transform: translateY(10px); } to { opacity: 1; background-color: transparent; transform: translateY(0); } }
         .new-comment-highlight { animation: fadeIn 0.8s ease-out forwards; }
     </style>
 </head>
 <body>
 
+    <!-- HTML Structure -->
     <div id="map"></div>
 
     <!-- Control Panel -->
@@ -194,6 +222,21 @@
         <button id="leaderboard-button" class="map-button" title="View Leaderboard"><i class="fa-solid fa-trophy"></i></button>
     </div>
 
+    <!-- Navigation HUD (New!) -->
+    <div id="nav-hud">
+        <div class="nav-top-bar">
+            <i class="fa-solid fa-arrow-up"></i>
+            <span id="nav-instruction">Head Northwest</span>
+        </div>
+        <div class="nav-bottom-bar">
+            <div class="nav-info">
+                <div id="nav-time" style="font-weight:bold; font-size:20px;">15 min</div>
+                <div id="nav-dist" style="color:#666; font-size:12px;">5.2 km</div>
+            </div>
+            <button class="nav-btn-exit" id="exit-nav-btn">Exit</button>
+        </div>
+    </div>
+
     <!-- Modals -->
     <div id="leaderboard-modal" class="modal-overlay hidden">
         <div class="modal-content">
@@ -250,6 +293,7 @@
         const OWM_API_KEY = '5f66e14d6562958e2f9fb986b4fc8bdf';
 
         let map, temperatureLayerGroup, activeLayers = {}, currentMainMode = 'geointel', currentGeoIntelMode = 'flood', clickMarker = null, radarAnimation = null, radarData = null, fullForecastData = null;
+        let navWatchId = null, userMarker = null, startMarker = null, endMarker = null, accCircle = null; // Added accCircle
         const routeLayers = L.featureGroup();
         const issueLayerGroup = L.layerGroup();
         let issuesData = null;
@@ -307,16 +351,19 @@
             ui.switchFloodBtn.addEventListener('click', () => switchGeoIntelMode('flood'));
             ui.switchDeforestationBtn.addEventListener('click', () => switchGeoIntelMode('deforestation'));
             ui.searchRouteBtn.addEventListener('click', handleRouteSearch);
+            
+            // These functions are now defined, so this is safe
             ui.reportBtn.addEventListener('click', handleReportButtonClick);
             ui.leaderboardBtn.addEventListener('click', showLeaderboard);
             ui.reportForm.addEventListener('submit', handleReportSubmit);
-            document.getElementById('use-current-location-btn').addEventListener('click', handleUseCurrentLocation);
             
-            // CRITICAL FIX: Listen for input changes to clear GPS state
+            document.getElementById('use-current-location-btn').addEventListener('click', handleUseCurrentLocation);
+            document.getElementById('exit-nav-btn').addEventListener('click', stopNavigation); // Exit Nav Listener
+
+            // Clear GPS when typing manually
             ui.startLocationInput.addEventListener('input', function() {
                 delete this.dataset.lat;
                 delete this.dataset.lon;
-                // Visual cue that GPS is disabled
                 document.getElementById('use-current-location-btn').innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
             });
 
@@ -336,7 +383,6 @@
             document.addEventListener("keydown", e => {
                 if (e.key === "Escape") {
                     document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(modal => modal.classList.add('hidden'));
-                    // Removed resetDashboard() here to keep results visible after closing details
                 }
             });
             
@@ -801,6 +847,21 @@
                 const { latitude, longitude } = position.coords;
                 startInput.dataset.lat = latitude;
                 startInput.dataset.lon = longitude;
+                
+                // --- Visual Update for GPS ---
+                if (userMarker) map.removeLayer(userMarker);
+                if (accCircle) map.removeLayer(accCircle);
+                
+                const acc = position.coords.accuracy;
+                accCircle = L.circle([latitude, longitude], {
+                    radius: acc, color: '#0d6efd', weight: 1, opacity: 0.5, fillColor: '#0d6efd', fillOpacity: 0.2
+                }).addTo(map);
+                
+                userMarker = L.circleMarker([latitude, longitude], {
+                    radius: 8, color: '#ffffff', weight: 2, opacity: 1, fillColor: '#0d6efd', fillOpacity: 1
+                }).addTo(map);
+                
+                map.setView([latitude, longitude], 15);
 
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`);
                 if (!response.ok) throw new Error("Reverse geocoding failed.");
@@ -820,7 +881,7 @@
             }
         }
         
-        // --- Restored Missing Functions ---
+        // --- RESTORED & FIXED: User Interaction Functions ---
         
         async function handleReportButtonClick() {
            if (currentMainMode !== 'jalansafe') { switchMainMode('jalansafe'); }
@@ -849,7 +910,7 @@
                document.getElementById('report-address').textContent = 'Could not fetch address.';
            }
         }
-
+        
         async function handleReportSubmit(e) {
             e.preventDefault();
             const formData = new FormData();
@@ -901,6 +962,8 @@
                 list.innerHTML = `<p style="color: #dc3545;">Error: ${error.message}</p>`;
             }
         }
+        
+        // --- JalanSafe Routing & Navigation ---
 
         async function handleRouteSearch() {
             const startInput = ui.startLocationInput;
@@ -960,6 +1023,10 @@
             const resultsPanel = ui.routeResultsPanel;
             resultsPanel.innerHTML = '';
             activeLayers.routes = {};
+            
+            // Cleanup old markers
+            if (startMarker) map.removeLayer(startMarker);
+            if (endMarker) map.removeLayer(endMarker);
 
             if (!Array.isArray(routes) || routes.length === 0) {
                 resultsPanel.innerHTML = '<p>No valid routes found.</p>';
@@ -974,7 +1041,16 @@
                 item.dataset.routeId = route.id;
                 
                 const userCountText = route.active_users > 0 ? `| <i class="fa-solid fa-users"></i> ${route.active_users}` : '';
-                item.innerHTML = `<h5>Route ${index + 1}</h5><p>Time: ~${Math.round(route.base_travel_time / 60)} mins | Distance: ${(route.distance / 1000).toFixed(1)} km ${userCountText}</p>`;
+                const badge = (index === 0) ? '<span style="font-size:10px; background:#444; padding:2px 5px; border-radius:3px; margin-left:5px;">BEST</span>' : '';
+                const routeName = route.summary || `Route ${index + 1}`;
+
+                item.innerHTML = `
+                    <div style="font-weight:bold;">${routeName} ${badge}</div>
+                    <div style="font-size:12px; color:#bbb; margin-top:5px;">
+                        🕒 ${Math.round(route.base_travel_time / 60)} mins | 📏 ${(route.distance / 1000).toFixed(1)} km <br>
+                        👥 ${route.active_users} active users ${userCountText ? '' : '(Light)'}
+                    </div>
+                `;
                 
                 const decodedCoords = decodePolyline(route.geometry);
                 const latlngs = decodedCoords.map(c => [c[0], c[1]]);
@@ -989,6 +1065,19 @@
 
             if (routeLayers.getLayers().length > 0) {
                 map.fitBounds(routeLayers.getBounds(), { padding: [50, 50] });
+                
+                // Add start and end markers based on first route
+                const firstRouteGeom = decodePolyline(routes[0].geometry);
+                const startPos = firstRouteGeom[0];
+                const endPos = firstRouteGeom[firstRouteGeom.length - 1];
+                
+                startMarker = L.marker(startPos, {
+                    icon: L.divIcon({ className: 'start-marker-icon', html: '<i class="fa-solid fa-location-dot"></i>', iconSize: [24, 24], iconAnchor: [12, 24] })
+                }).addTo(map);
+
+                endMarker = L.marker(endPos, {
+                    icon: L.divIcon({ className: 'end-marker-icon', html: '<i class="fa-solid fa-flag-checkered"></i>', iconSize: [24, 24], iconAnchor: [4, 24] })
+                }).addTo(map);
             }
         }
 
@@ -1024,9 +1113,15 @@
             
             let navButtonHtml = '';
             if (hasGPS) {
-                navButtonHtml = `<button id="start-nav-btn" data-route-hash="${data.id}" style="width: 100%; border: none; background: #28a745; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px; margin-top: 20px;">
-                    <i class="fa-solid fa-location-arrow"></i> Start Navigation (Google Maps)
-                </button>`;
+                navButtonHtml = `
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button id="start-nav-btn" data-route-hash="${data.id}" style="flex:1; border: none; background: #28a745; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px;">
+                            <i class="fa-solid fa-location-arrow"></i> In-App Nav
+                        </button>
+                         <button id="google-maps-btn" data-route-hash="${data.id}" style="flex:1; border: none; background: #4285F4; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px;">
+                            <i class="fa-brands fa-google"></i> Google Maps
+                        </button>
+                    </div>`;
             } else {
                 navButtonHtml = `<p style="color:#888; font-size:12px; text-align:center; margin-top:15px;">
                     <i class="fa-solid fa-lock"></i> Navigation is locked. <br>Please use the <strong>GPS button</strong> to enable navigation.
@@ -1034,7 +1129,7 @@
             }
             
             const modalContent = ui.routeDetailsModal.querySelector('#route-details-content');
-            ui.routeDetailsModal.querySelector('#route-details-title').innerText = `Details for Route ${index}`;
+            ui.routeDetailsModal.querySelector('#route-details-title').innerText = `Details for ${data.summary || 'Route ' + index}`;
             
             modalContent.innerHTML = `
                 <p><strong>Estimated Arrival:</strong> ${etaString}</p>
@@ -1046,10 +1141,27 @@
             
             ui.routeDetailsModal.classList.remove('hidden');
             
+            // In-App Navigation Handler
             const navBtn = modalContent.querySelector('#start-nav-btn');
             if (navBtn) {
                 navBtn.addEventListener('click', async () => {
-                    // 1. Log choice to our DB (Crowdsourcing)
+                    try {
+                        const payload = { user_id: 1, chosen_route_hash: data.id };
+                        await fetch(`${API_BASE_URL}/api/v1/routes/choose`, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify(payload) 
+                        });
+                    } catch (e) { console.error("Logging failed", e); }
+                    
+                    startInAppNavigation(data, index);
+                });
+            }
+
+            // Google Maps Handler
+            const gMapsBtn = modalContent.querySelector('#google-maps-btn');
+            if (gMapsBtn) {
+                 gMapsBtn.addEventListener('click', async () => {
                     try {
                         const payload = { user_id: 1, chosen_route_hash: data.id };
                         await fetch(`${API_BASE_URL}/api/v1/routes/choose`, { 
@@ -1059,31 +1171,78 @@
                         });
                     } catch (e) { console.error("Logging failed", e); }
 
-                    // 2. Redirect to Google Maps (Real Navigation)
                     const origin = `${startInput.dataset.lat},${startInput.dataset.lon}`;
                     const path = decodePolyline(data.geometry);
                     const destLat = path[path.length-1][0];
                     const destLon = path[path.length-1][1];
-                    
                     const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destLat},${destLon}&travelmode=driving`;
-                    
                     window.open(gmapsUrl, '_blank');
-                    
                     ui.routeDetailsModal.classList.add('hidden');
-                });
+                 });
             }
         }
         
-        // --- JalanSafe Helper Functions ---
+        function startInAppNavigation(routeData, routeIndex) {
+             ui.routeDetailsModal.classList.add('hidden');
+             document.getElementById('control-panel').classList.add('minimized'); // Hide search panel
+             
+             const hud = document.getElementById('nav-hud');
+             hud.style.display = 'block'; // Show HUD
+             
+             const firstInstruction = (routeData.instructions && routeData.instructions.length > 0) ? routeData.instructions[0].text : "Head towards destination";
+             document.getElementById('nav-instruction').innerText = firstInstruction;
+             
+             document.getElementById('nav-dist').innerText = (routeData.distance / 1000).toFixed(1) + " km remaining";
+             
+             // Zoom to route
+             const routeLayer = activeLayers.routes[routeData.id].line;
+             map.fitBounds(routeLayer.getBounds());
+             
+             // Start tracking if possible
+             if (navigator.geolocation) {
+                 navWatchId = navigator.geolocation.watchPosition((pos) => {
+                     const lat = pos.coords.latitude;
+                     const lon = pos.coords.longitude;
+                     if (!userMarker) {
+                         userMarker = L.circleMarker([lat, lon], { radius: 8, color: 'white', fillColor: '#0d6efd', fillOpacity: 1 }).addTo(map);
+                     } else {
+                         userMarker.setLatLng([lat, lon]);
+                     }
+                 }, (e) => console.warn(e), { enableHighAccuracy: true });
+             }
+        }
+        
+        // RESTORED: stopNavigation function
+        function stopNavigation() {
+             const hud = document.getElementById('nav-hud');
+             hud.style.display = 'none';
+             
+             if (navWatchId) {
+                 navigator.geolocation.clearWatch(navWatchId);
+                 navWatchId = null;
+             }
+             if (userMarker) {
+                 map.removeLayer(userMarker);
+                 userMarker = null;
+             }
+             
+             document.getElementById('control-panel').classList.remove('minimized');
+             alert("Navigation Ended.");
+             // Re-fit map to see results again
+             if (Object.keys(activeLayers.routes).length > 0) {
+                  const group = new L.FeatureGroup();
+                  for(let id in activeLayers.routes) group.addLayer(activeLayers.routes[id].line);
+                  map.fitBounds(group.getBounds(), {padding: [50, 50]});
+             }
+        }
 
         function generateAIExplanation(routeData, allRoutes) {
             // Find the route with the highest score (The "Winner")
-            // Note: allRoutes is already sorted by score from backend, so allRoutes[0] is the best.
             const bestRoute = allRoutes[0];
             const isBestOption = (routeData.id === bestRoute.id);
             
-            const userCount = routeData.active_users;
-            const issueCount = routeData.issues.length;
+            const userCount = routeData.active_users || 0;
+            const issueCount = routeData.issues ? routeData.issues.length : 0;
             const timeSlower = Math.round(routeData.time_slower / 60);
             
             let title = "";
@@ -1098,7 +1257,6 @@
                     title = "✅ <strong>Best Available Option:</strong>";
                     analysis = `Traffic is building up (${userCount} users), but this is still your best choice compared to others.`;
                 } else {
-                    // Even if it's red, if it's the best we have...
                     title = "⚠️ <strong>Best of a Bad Situation:</strong>";
                     analysis = `All routes are congested or hazardous. This route is calculated to be the least painful option despite having ${userCount} users.`;
                 }
@@ -1112,7 +1270,7 @@
                     // Specific comparisons
                     if (userCount > bestRoute.active_users + 5) {
                         analysis = `<strong>Significantly more congested</strong> than the best route (has ${userCount - bestRoute.active_users} more users).`;
-                    } else if (issueCount > bestRoute.issues.length) {
+                    } else if (issueCount > (bestRoute.issues ? bestRoute.issues.length : 0)) {
                         analysis = `Contains <strong>more road hazards</strong> than the recommended route.`;
                     } else {
                         analysis = `Overall analysis shows this route is inferior due to a combination of traffic and distance.`;
@@ -1144,7 +1302,6 @@
             `;
         }
 
-        // --- Generates HTML for the evidence images ---
         function generateEvidenceHtml(issues) {
             if (!Array.isArray(issues) || issues.length === 0) {
                 return `<div style="margin-top:10px; font-style:italic; color:#888;"><i class="fa-solid fa-check-circle"></i> No user reports found for this route.</div>`;
@@ -1162,17 +1319,6 @@
                     </div>`;
             });
             return html;
-        }
-
-        async function handleStartNavigation(event, routeIndex) {
-            const routeHash = event.target.dataset.routeHash;
-            try {
-                const payload = { user_id: 1, chosen_route_hash: routeHash };
-                const response = await fetch(`${API_BASE_URL}/api/v1/routes/choose`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (response.ok) { console.log("Successfully logged route choice."); }
-            } catch (error) { console.error("Error logging route choice:", error); }
-            alert(`Simulating navigation start for Route ${routeIndex}... Your choice will affect future recommendations.`);
-            ui.routeDetailsModal.classList.add('hidden');
         }
         
         // =========================================================================

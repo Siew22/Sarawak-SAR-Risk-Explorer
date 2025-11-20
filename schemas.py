@@ -91,7 +91,6 @@ class RouteRequestWithStartCoords(BaseModel):
     start_lon: float
     end_name: str
     
-# --- CRITICAL UPDATE: Added 'instructions' field ---
 class RouteResult(BaseModel):
     id: str
     geometry: str
@@ -104,4 +103,5 @@ class RouteResult(BaseModel):
     tags: List[str]
     is_optimal: bool
     time_slower: float
-    instructions: List[Any] = [] # New field for turn-by-turn data
+    instructions: List[Any] = [] 
+    summary: str  # <--- NEW: Stores "Via Jalan X"
