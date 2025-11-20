@@ -18,15 +18,14 @@
         /* --- 2. Floating Panels --- */
         .floating-panel {
             position: absolute; z-index: 1000;
-            background: rgba(30, 30, 30, 0.85);
+            background: rgba(30, 30, 30, 0.9);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            color: #f0f0f0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease; color: #f0f0f0;
         }
-        #control-panel { top: 20px; left: 20px; width: 350px; padding: 15px 20px; }
-        #result-panel { top: 220px; left: 20px; width: 350px; max-height: calc(100vh - 240px); padding: 15px 20px; overflow-y: auto; transform: translateX(-120%); }
+        #control-panel { top: 20px; left: 20px; width: 350px; padding: 20px; }
+        #result-panel { top: 220px; left: 20px; width: 350px; max-height: calc(100vh - 240px); padding: 20px; overflow-y: auto; transform: translateX(-120%); transition: transform 0.3s ease; }
         #result-panel.visible { transform: translateX(0); }
         #layer-panel { top: 20px; right: 20px; width: 250px; padding: 10px; }
         #forecast-panel { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80%; max-width: 1200px; padding: 0; border-radius: 12px 12px 0 0; overflow: hidden; opacity: 0; transition: opacity 0.4s ease, bottom 0.4s ease; pointer-events: none; z-index: 1001;}
@@ -42,21 +41,22 @@
         .analysis-switcher .switch-button { flex: 1; padding: 8px; border: none; background: transparent; color: #aaa; cursor: pointer; border-radius: 4px; font-weight: 700; font-size: 14px; transition: all .2s ease; }
         .analysis-switcher .switch-button.active { background: #0d6efd; color: #fff; }
 
-        #control-panel h4 { margin: 0 0 15px 0; color: #fff; font-size: 18px; }
-        
         /* --- 4. Search Forms --- */
+        #control-panel h4 { margin: 0 0 15px 0; color: #fff; font-size: 18px; }
         .search-container { display: flex; margin-bottom: 10px; }
         #geointel-search-input { flex-grow: 1; border: 1px solid #444; padding: 10px; border-radius: 6px 0 0 6px; background: #333; color: #fff; font-size: 14px; outline: none; }
         .instructions { font-size: 13px; color: #aaa; text-align: center; }
-
         .route-search { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
         .route-search input { width: 100%; box-sizing: border-box; border: 1px solid #444; padding: 12px; border-radius: 6px; background: #333; color: #fff; font-size: 14px; }
-        .route-search button { width: 100%; border: none; background: #28a745; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px; }
-        
-        #map-buttons-container { position: absolute; z-index: 999; bottom: 30px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .map-button { width: 50px; height: 50px; border-radius: 50%; border: none; background: #0d6efd; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; }
+        .route-search button { width: 100%; border: none; background: #28a745; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px; transition: background 0.2s; }
+        .route-search button:hover { background: #218838; }
 
-        /* --- 5. Result Display --- */
+        /* --- 5. Map Controls --- */
+        #map-buttons-container { position: absolute; z-index: 999; bottom: 30px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .map-button { width: 50px; height: 50px; border-radius: 50%; border: none; background: #0d6efd; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+        .map-button:hover { transform: scale(1.1); }
+
+        /* --- 6. Results Display --- */
         .location-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: #fff; }
         .risk-summary { padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #fff; text-align: center; }
         .risk-summary h2 { margin: 0 0 5px 0; font-size: 24px; font-weight: 600; }
@@ -68,22 +68,21 @@
         .evidence-details p { margin: 5px 0 15px 0; line-height: 1.6; font-size: 14px; color: #ccc; }
         
         #route-results-panel { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .route-item { padding: 15px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all .2s ease; }
-        .route-item.green { background: rgba(40, 167, 69, 0.2); border-color: #28a745; }
-        .route-item.yellow { background: rgba(255, 193, 7, 0.2); border-color: #ffc107; }
-        .route-item.red { background: rgba(220, 53, 69, 0.2); border-color: #dc3545; }
+        .route-item { padding: 15px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all .2s ease; background: rgba(255, 255, 255, 0.05); }
+        .route-item:hover { background: rgba(255, 255, 255, 0.1); }
+        .route-item.green { border-left: 5px solid #28a745; }
+        .route-item.yellow { border-left: 5px solid #ffc107; }
+        .route-item.red { border-left: 5px solid #dc3545; }
         .route-item h5 { margin: 0 0 5px 0; font-size: 16px; }
         .route-item p { margin: 0; font-size: 13px; opacity: 0.8; }
 
-        /* --- 6. Modals --- */
+        /* --- 7. Modals --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: #1e1e1e; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); position: relative; color: #e0e0e0; }
+        .modal-content { background: #1e1e1e; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3); position: relative; color: #e0e0e0; }
         .modal-content h3 { margin: 0 0 20px 0; color: #0d6efd; }
-        .modal-content h4 { color: #a0a0a0; }
         .modal-close-button { position: absolute; top: 10px; right: 15px; background: none; border: none; color: #aaa; font-size: 24px; cursor: pointer; }
         .hidden { display: none !important; }
 
-        /* --- 7. Leaderboard & Forms --- */
         #leaderboard-list { max-height: 60vh; overflow-y: auto; }
         .leaderboard-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #333; }
         .rank-number { font-size: 18px; font-weight: 700; width: 40px; text-align: center; color: #0d6efd; }
@@ -96,10 +95,10 @@
 
         /* --- 8. Overlays & Tooltips --- */
         #status-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2001; background: rgba(0,0,0,.8); color: #fff; padding: 20px 30px; border-radius: 10px; font-size: 20px; display: none; align-items: center; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1.5s linear infinite; display: inline-block; vertical-align: middle; margin-right: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #action-tooltip { position: absolute; top: 185px; left: 20px; background-color: #0d6efd; color: #fff; padding: 10px 15px; border-radius: 6px; font-size: 14px; z-index: 2001; opacity: 0; transform: translateY(-20px); transition: opacity .3s ease, transform .3s ease; pointer-events: none; }
-        
+
         /* --- 9. Layer List --- */
         .layer-list { list-style: none; padding: 0; margin: 0; }
         .layer-item { padding: 12px 15px; margin: 5px 0; border-radius: 6px; cursor: pointer; transition: background-color .2s ease; display: flex; align-items: center; }
@@ -112,17 +111,12 @@
         #radar-timeline-panel { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(30,30,30,.85); padding: 10px 15px; border-radius: 8px; display: none; align-items: center; width: 50%; max-width: 600px; }
         #radar-play-button { background: 0 0; border: none; color: #fff; font-size: 20px; cursor: pointer; margin-right: 10px; }
         #radar-timestamp { font-size: 14px; font-weight: 700; min-width: 80px; text-align: center; }
-        
         .temperature-label { background: rgba(0,0,0,.6); border-radius: 15px; padding: 3px 10px; color: #fff; font-weight: 700; font-size: 14px; text-align: center; white-space: nowrap; border: 1px solid rgba(255,255,255,.2); box-shadow: 0 2px 5px rgba(0,0,0,.3); }
         .temperature-label .city-name { font-size: 12px; font-weight: 400; display: block; opacity: .8; }
-        
         .daily-forecast-container { display: flex; background: rgba(40,40,40,.9); }
         .day-forecast { flex: 1; padding: 15px 10px; text-align: center; border-right: 1px solid #444; cursor: pointer; transition: background-color .2s ease; }
         .day-forecast:last-child { border-right: none; }
         .day-forecast.active, .day-forecast:hover { background-color: #0d6efd; }
-        .day-forecast .day-name { font-weight: 700; font-size: 14px; }
-        .day-forecast .weather-icon { font-size: 24px; margin: 10px 0; }
-        .day-forecast .temp-range { font-size: 14px; }
         .hourly-forecast-container { display: none; background: rgba(20,20,20,.9); padding: 15px; white-space: nowrap; overflow-x: auto; }
         .hourly-forecast-container.visible { display: block; }
         .hour-forecast { display: inline-block; width: 80px; padding: 10px; text-align: center; }
@@ -130,33 +124,117 @@
         .hour-forecast .hour-temp { font-size: 18px; margin: 5px 0; }
         .issue-marker-icon { text-align: center; }
         
-        @keyframes fadeIn {
-            from { opacity: 0; background-color: rgba(40, 167, 69, 0.3); transform: translateY(10px); }
-            to { opacity: 1; background-color: transparent; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; background-color: rgba(40, 167, 69, 0.3); transform: translateY(10px); } to { opacity: 1; background-color: transparent; transform: translateY(0); } }
         .new-comment-highlight { animation: fadeIn 0.8s ease-out forwards; }
-        .fa-spinner { animation: spin 1.5s linear infinite; }
     </style>
 </head>
 <body>
 
-    <!-- HTML structure is complete and correct -->
+    <!-- HTML Structure -->
     <div id="map"></div>
+
+    <!-- Control Panel -->
     <div id="control-panel" class="floating-panel">
-        <div class="mode-switcher"><button id="switch-geointel" class="switch-button active"><i class="fa-solid fa-satellite-dish"></i> Geo-Intel</button><button id="switch-jalansafe" class="switch-button"><i class="fa-solid fa-road"></i> JalanSafe AI</button></div>
-        <div id="geointel-panel-content"><h4><i class="fa-solid fa-satellite"></i> Analysis Mode</h4><div class="analysis-switcher"><button id="switch-flood" class="switch-button active">Flood Risk</button><button id="switch-deforestation" class="switch-button">Deforestation</button></div><div class="search-container"><input type="text" id="geointel-search-input" placeholder="e.g., Sibu, Sarawak"><button id="geointel-search-button" title="Search Location"><i class="fa-solid fa-search"></i></button></div><p class="instructions" id="geointel-instructions">Click map or search to analyze risk.</p></div>
-        <div id="jalansafe-panel-content" class="hidden"><h4><i class="fa-solid fa-route"></i> AI Smart Navigator</h4><div class="route-search"><div style="position: relative; display: flex; align-items: center;"><input type="text" id="start-location-input" placeholder="Enter start location"><button id="use-current-location-btn" title="Use my current location" style="position: absolute; right: 5px; width: 35px; height: 35px; border: none; background: transparent; color: #aaa; font-size: 18px; cursor: pointer;"><i class="fa-solid fa-location-crosshairs"></i></button></div><input type="text" id="end-location-input" placeholder="Enter end location"><button id="search-route-button">Find Best Route</button></div><div id="route-results-panel"></div></div>
+        <div class="mode-switcher">
+            <button id="switch-geointel" class="switch-button active"><i class="fa-solid fa-satellite-dish"></i> Geo-Intel</button>
+            <button id="switch-jalansafe" class="switch-button"><i class="fa-solid fa-road"></i> JalanSafe AI</button>
+        </div>
+
+        <!-- Geo-Intel Panel -->
+        <div id="geointel-panel-content">
+            <h4><i class="fa-solid fa-satellite"></i> Analysis Mode</h4>
+            <div class="analysis-switcher">
+                <button id="switch-flood" class="switch-button active">Flood Risk</button>
+                <button id="switch-deforestation" class="switch-button">Deforestation</button>
+            </div>
+            <div class="search-container">
+                <input type="text" id="geointel-search-input" placeholder="e.g., Sibu, Sarawak">
+                <button id="geointel-search-button" title="Search Location"><i class="fa-solid fa-search"></i></button>
+            </div>
+            <p class="instructions" id="geointel-instructions">Click map or search to analyze risk.</p>
+        </div>
+
+        <!-- JalanSafe Panel -->
+        <div id="jalansafe-panel-content" class="hidden">
+            <h4><i class="fa-solid fa-route"></i> AI Smart Navigator</h4>
+            <div class="route-search">
+                <div style="position: relative; display: flex; align-items: center;">
+                    <input type="text" id="start-location-input" placeholder="Enter start location">
+                    <button id="use-current-location-btn" title="Use my current location" style="position: absolute; right: 5px; width: 35px; height: 35px; border: none; background: transparent; color: #aaa; font-size: 18px; cursor: pointer;">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </button>
+                </div>
+                <input type="text" id="end-location-input" placeholder="Enter end location">
+                <button id="search-route-button">Find Best Route</button>
+            </div>
+            <div id="route-results-panel"></div>
+        </div>
     </div>
+
+    <!-- Result & Forecast Panels -->
     <div id="result-panel" class="floating-panel"></div>
-    <div id="forecast-panel" class="floating-panel"><div class="daily-forecast-container" id="daily-forecast-container"></div><div class="hourly-forecast-container" id="hourly-forecast-container"></div></div>
-    <div id="layer-panel" class="floating-panel"><ul class="layer-list" id="layer-list"></ul></div>
-    <div id="map-buttons-container"><button id="report-button" class="map-button" title="Report Road Issue"><i class="fa-solid fa-plus"></i></button><button id="leaderboard-button" class="map-button" title="View Leaderboard"><i class="fa-solid fa-trophy"></i></button></div>
-    <div id="leaderboard-modal" class="modal-overlay hidden"><div class="modal-content"><button class="modal-close-button">&times;</button><h3><i class="fa-solid fa-trophy"></i> Top Contributors</h3><div id="leaderboard-list"></div></div></div>
-    <div id="report-modal" class="modal-overlay hidden"><div class="modal-content"><button class="modal-close-button">&times;</button><h3><i class="fa-solid fa-triangle-exclamation"></i> Report an Issue</h3><p>Report location: <strong id="report-address">Fetching address...</strong></p><form id="report-form"><select id="report-type" required><option value="" disabled selected>Select issue type...</option><option value="road_condition">Road Condition</option><option value="traffic_light">Traffic Light Fault</option></select><textarea id="report-description" placeholder="Describe the issue..." required></textarea><input type="file" id="report-photo" accept="image/*" required><button type="submit">Submit Report</button></form></div></div>
-    <div id="route-details-modal" class="modal-overlay hidden"><div class="modal-content"><button class="modal-close-button">&times;</button><h3 id="route-details-title">Route Details</h3><div id="route-details-content"></div></div></div>
+    
+    <div id="forecast-panel" class="floating-panel">
+        <div class="daily-forecast-container" id="daily-forecast-container"></div>
+        <div class="hourly-forecast-container" id="hourly-forecast-container"></div>
+    </div>
+
+    <!-- Layer Panel -->
+    <div id="layer-panel" class="floating-panel">
+        <ul class="layer-list" id="layer-list"></ul>
+    </div>
+
+    <!-- Bottom Right Buttons -->
+    <div id="map-buttons-container">
+        <button id="report-button" class="map-button" title="Report Road Issue"><i class="fa-solid fa-plus"></i></button>
+        <button id="leaderboard-button" class="map-button" title="View Leaderboard"><i class="fa-solid fa-trophy"></i></button>
+    </div>
+
+    <!-- Modals -->
+    <div id="leaderboard-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close-button">&times;</button>
+            <h3><i class="fa-solid fa-trophy"></i> Top Contributors</h3>
+            <div id="leaderboard-list"></div>
+        </div>
+    </div>
+
+    <div id="report-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close-button">&times;</button>
+            <h3><i class="fa-solid fa-triangle-exclamation"></i> Report an Issue</h3>
+            <p>Report location: <strong id="report-address">Fetching address...</strong></p>
+            <form id="report-form">
+                <select id="report-type" required>
+                    <option value="" disabled selected>Select issue type...</option>
+                    <option value="road_condition">Road Condition</option>
+                    <option value="traffic_light">Traffic Light Fault</option>
+                </select>
+                <textarea id="report-description" placeholder="Describe the issue..." required></textarea>
+                <input type="file" id="report-photo" accept="image/*" required>
+                <button type="submit">Submit Report</button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="route-details-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close-button">&times;</button>
+            <h3 id="route-details-title">Route Details</h3>
+            <div id="route-details-content"></div>
+        </div>
+    </div>
+    
+    <!-- Overlays -->
     <div id="status-overlay"></div>
     <div id="action-tooltip"></div>
-    <div id="radar-timeline-panel"><button id="radar-play-button"><i class="fa-solid fa-play"></i></button><input type="range" id="radar-slider" style="flex-grow: 1; margin: 0 10px;"><div id="radar-timestamp"></div></div>
+    
+    <!-- Radar Control -->
+    <div id="radar-timeline-panel">
+        <button id="radar-play-button"><i class="fa-solid fa-play"></i></button>
+        <input type="range" id="radar-slider" style="flex-grow: 1; margin: 0 10px;">
+        <div id="radar-timestamp"></div>
+    </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -246,7 +324,7 @@
             document.addEventListener("keydown", e => {
                 if (e.key === "Escape") {
                     document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(modal => modal.classList.add('hidden'));
-                    resetDashboard();
+                    //sresetDashboard();
                 }
             });
             
@@ -729,6 +807,88 @@
                 startInput.disabled = false;
             }
         }
+        
+        // MISSING FUNCTIONS RESTORED HERE
+        async function handleReportButtonClick() {
+           if (currentMainMode !== 'jalansafe') { switchMainMode('jalansafe'); }
+           showStatus("Getting your current location...");
+           navigator.geolocation.getCurrentPosition((position) => {
+               hideStatus();
+               const { latitude, longitude } = position.coords;
+               openReportModal(latitude, longitude);
+           }, (error) => {
+               hideStatus();
+               console.error(`Could not get GPS location: ${error.message}`);
+               alert('Could not get your current location. Please ensure location services are enabled for your browser.');
+           }, { enableHighAccuracy: true });
+        }
+
+        async function openReportModal(lat, lon) {
+           ui.reportModal.classList.remove('hidden');
+           document.getElementById('report-address').textContent = `Coords: ${lat.toFixed(5)}, ${lon.toFixed(5)}. Fetching...`;
+           ui.reportForm.dataset.lat = lat;
+           ui.reportForm.dataset.lon = lon;
+           try {
+               const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+               const data = await response.json();
+               document.getElementById('report-address').textContent = data.display_name || 'Address not found.';
+           } catch (error) {
+               document.getElementById('report-address').textContent = 'Could not fetch address.';
+           }
+        }
+
+        async function handleReportSubmit(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('photo', document.getElementById('report-photo').files[0]);
+            formData.append('user_id', 1);
+            formData.append('latitude', ui.reportForm.dataset.lat);
+            formData.append('longitude', ui.reportForm.dataset.lon);
+            formData.append('report_type', document.getElementById('report-type').value);
+            formData.append('description', document.getElementById('report-description').value);
+            showStatus('Submitting report...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/reports`, { method: 'POST', body: formData });
+                if (!response.ok) throw new Error('Failed to submit report.');
+                alert('Report submitted successfully!');
+                ui.reportModal.classList.add('hidden');
+                ui.reportForm.reset();
+                issuesData = null; 
+                const issuesLayerButton = document.querySelector('.layer-item[data-layer-id="issues"]');
+                if (issuesLayerButton && issuesLayerButton.classList.contains('active')) {
+                    await toggleIssuesLayer();
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            } finally {
+                hideStatus();
+            }
+        }
+
+        async function showLeaderboard() {
+            ui.leaderboardModal.classList.remove('hidden');
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '<p>Loading...</p>';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/rank`);
+                if (!response.ok) throw new Error('Failed to load leaderboard.');
+                const data = await response.json();
+                list.innerHTML = '';
+                if (data.length === 0) {
+                    list.innerHTML = '<p>No contributors yet.</p>';
+                    return;
+                }
+                data.forEach((user, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'leaderboard-item';
+                    item.innerHTML = `<div class="rank-number">#${index + 1}</div><div class="rank-name">${user.username}</div><div class="rank-points">${user.points} pts</div>`;
+                    list.appendChild(item);
+                });
+            } catch (error) {
+                list.innerHTML = `<p style="color: #dc3545;">Error: ${error.message}</p>`;
+            }
+        }
+        // END OF RESTORED FUNCTIONS
 
         async function handleRouteSearch() {
             const startInput = ui.startLocationInput;
@@ -801,7 +961,7 @@
                 item.className = `route-item ${route.color}`;
                 item.dataset.routeId = route.id;
                 
-                const userCountText = route.user_count > 0 ? `| <i class="fa-solid fa-users"></i> ${route.user_count}` : '';
+                const userCountText = route.active_users > 0 ? `| <i class="fa-solid fa-users"></i> ${route.active_users}` : '';
                 item.innerHTML = `<h5>Route ${index + 1}</h5><p>Time: ~${Math.round(route.base_travel_time / 60)} mins | Distance: ${(route.distance / 1000).toFixed(1)} km ${userCountText}</p>`;
                 
                 const decodedCoords = decodePolyline(route.geometry);
@@ -835,28 +995,71 @@
 
             const { data, index } = selectedRoute;
 
-            // Generate all content based on raw data
-            const allRoutes = Object.values(activeLayers.routes).map(r => r.data);
-            const aiExplanation = generateAIExplanation(data, allRoutes);
+            // Get ALL routes data for comparative analysis
+            const allRoutesData = Object.values(activeLayers.routes).map(r => r.data).sort((a,b) => b.final_score - a.final_score);
+            
+            // Pass all routes to the AI generator
+            const aiExplanation = generateAIExplanation(data, allRoutesData);
+            
             const arrivalTime = new Date(Date.now() + data.base_travel_time * 1000);
             const etaString = arrivalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
             const evidenceHtml = generateEvidenceHtml(data.issues);
             
-            // Populate the modal
+            // --- LOGIC: Decide if "Start Navigation" button should be shown ---
+            const startInput = ui.startLocationInput;
+            const hasGPS = startInput.dataset.lat && startInput.dataset.lon;
+            
+            let navButtonHtml = '';
+            if (hasGPS) {
+                navButtonHtml = `<button id="start-nav-btn" data-route-hash="${data.id}" style="width: 100%; border: none; background: #28a745; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px; margin-top: 20px;">
+                    <i class="fa-solid fa-location-arrow"></i> Start Navigation (Google Maps)
+                </button>`;
+            } else {
+                navButtonHtml = `<p style="color:#888; font-size:12px; text-align:center; margin-top:15px;">
+                    <i class="fa-solid fa-lock"></i> Navigation is locked. <br>Please use the <strong>GPS button</strong> to enable navigation.
+                </p>`;
+            }
+            
             const modalContent = ui.routeDetailsModal.querySelector('#route-details-content');
             ui.routeDetailsModal.querySelector('#route-details-title').innerText = `Details for Route ${index}`;
             
             modalContent.innerHTML = `
                 <p><strong>Estimated Arrival:</strong> ${etaString}</p>
                 <h4>Why this rating? (AI Explanation)</h4>
-                <p>${aiExplanation}</p>
+                <div style="line-height: 1.5;">${aiExplanation}</div>
                 ${evidenceHtml} 
-                <button id="start-nav-btn" data-route-hash="${data.id}" style="width: 100%; border: none; background: #28a745; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 16px; margin-top: 20px;">Start Navigation</button>
+                ${navButtonHtml}
             `;
             
             ui.routeDetailsModal.classList.remove('hidden');
             
-            modalContent.querySelector('#start-nav-btn').addEventListener('click', (event) => handleStartNavigation(event, index));
+            const navBtn = modalContent.querySelector('#start-nav-btn');
+            if (navBtn) {
+                navBtn.addEventListener('click', async () => {
+                    // 1. Log choice to our DB (Crowdsourcing)
+                    try {
+                        const payload = { user_id: 1, chosen_route_hash: data.id };
+                        await fetch(`${API_BASE_URL}/api/v1/routes/choose`, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify(payload) 
+                        });
+                    } catch (e) { console.error("Logging failed", e); }
+
+                    // 2. Redirect to Google Maps (Real Navigation)
+                    const origin = `${startInput.dataset.lat},${startInput.dataset.lon}`;
+                    const path = decodePolyline(data.geometry);
+                    const destLat = path[path.length-1][0];
+                    const destLon = path[path.length-1][1];
+                    
+                    const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destLat},${destLon}&travelmode=driving`;
+                    
+                    window.open(gmapsUrl, '_blank');
+                    
+                    ui.routeDetailsModal.classList.add('hidden');
+                });
+            }
         }
         
         // --- JalanSafe Helper Functions ---
@@ -929,24 +1132,27 @@
             `;
         }
 
+        // --- Generates HTML for the evidence images ---
         function generateEvidenceHtml(issues) {
             if (!Array.isArray(issues) || issues.length === 0) {
-                return `<h4><i class="fa-solid fa-check-circle"></i> No Major Issues Reported</h4><p>Our system has not detected any significant user-reported issues on this route.</p>`;
+                return `<div style="margin-top:10px; font-style:italic; color:#888;"><i class="fa-solid fa-check-circle"></i> No user reports found for this route.</div>`;
             }
 
-            let html = `<h4><i class="fa-solid fa-triangle-exclamation"></i> Detected Issue(s) on Route</h4>`;
+            let html = `<h5><i class="fa-solid fa-camera"></i> User Reports (Evidence)</h5>`;
             issues.forEach(issue => {
                 const fixedPhotoUrl = (issue.photo_url || '').replace(/\\/g, '/');
                 const imageUrl = fixedPhotoUrl.startsWith('http') ? fixedPhotoUrl : `${API_BASE_URL}/${fixedPhotoUrl}`;
                 html += `
-                    <div style="margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px;">
-                        <p><strong>Description:</strong> ${issue.description || 'No description'}</p>
-                        <img src="${imageUrl}" alt="Photo of reported issue" style="width: 100%; border-radius: 8px; margin-top: 10px;"/>
+                    <div style="background: rgba(255,255,255,0.1); padding:10px; border-radius:6px; margin-bottom:10px;">
+                        <div style="font-size:11px; color:#aaa; margin-bottom:5px;">Type: ${issue.type || 'Unknown'} | Date: ${issue.date || 'N/A'}</div>
+                        <p style="margin:0 0 5px 0; font-style:italic;">"${issue.description || 'No description'}"</p>
+                        <img src="${imageUrl}" alt="Report Image" style="width: 100%; max-height: 150px; object-fit: cover; border-radius: 4px;"/>
                     </div>`;
             });
             return html;
         }
-
+        
+        // --- Handles the actual start of navigation ---
         async function handleStartNavigation(event, routeIndex) {
             const routeHash = event.target.dataset.routeHash;
             try {
@@ -954,90 +1160,15 @@
                 const response = await fetch(`${API_BASE_URL}/api/v1/routes/choose`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 if (response.ok) { console.log("Successfully logged route choice."); }
             } catch (error) { console.error("Error logging route choice:", error); }
-            alert(`Simulating navigation start for Route ${routeIndex}... Your choice will affect future recommendations.`);
+            
+            // Simulate opening a navigation app
+            alert(`Navigation Started for Route ${routeIndex + 1}! Your choice has been logged to help other users.`);
             ui.routeDetailsModal.classList.add('hidden');
+            
+            // Redirect to Google Maps for real navigation (if coordinates allow)
+            // (Logic for this is handled inside showRouteDetails click handler in V17 logic)
         }
 
-        async function handleReportButtonClick() {
-            if (currentMainMode !== 'jalansafe') { switchMainMode('jalansafe'); }
-            showStatus("Getting your current location...");
-            navigator.geolocation.getCurrentPosition((position) => {
-                hideStatus();
-                const { latitude, longitude } = position.coords;
-                openReportModal(latitude, longitude);
-            }, (error) => {
-                hideStatus();
-                console.error(`Could not get GPS location: ${error.message}`);
-                alert('Could not get your current location. Please ensure location services are enabled for your browser.');
-            }, { enableHighAccuracy: true });
-        }
-        
-        async function openReportModal(lat, lon) {
-            ui.reportModal.classList.remove('hidden');
-            document.getElementById('report-address').textContent = `Coords: ${lat.toFixed(5)}, ${lon.toFixed(5)}. Fetching...`;
-            ui.reportForm.dataset.lat = lat;
-            ui.reportForm.dataset.lon = lon;
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                const data = await response.json();
-                document.getElementById('report-address').textContent = data.display_name || 'Address not found.';
-            } catch (error) {
-                document.getElementById('report-address').textContent = 'Could not fetch address.';
-            }
-        }
-
-        async function handleReportSubmit(e) {
-            e.preventDefault();
-            const formData = new FormData();
-            formData.append('photo', document.getElementById('report-photo').files[0]);
-            formData.append('user_id', 1);
-            formData.append('latitude', ui.reportForm.dataset.lat);
-            formData.append('longitude', ui.reportForm.dataset.lon);
-            formData.append('report_type', document.getElementById('report-type').value);
-            formData.append('description', document.getElementById('report-description').value);
-            showStatus('Submitting report...');
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/reports`, { method: 'POST', body: formData });
-                if (!response.ok) throw new Error('Failed to submit report.');
-                alert('Report submitted successfully!');
-                ui.reportModal.classList.add('hidden');
-                ui.reportForm.reset();
-                issuesData = null; 
-                const issuesLayerButton = document.querySelector('.layer-item[data-layer-id="issues"]');
-                if (issuesLayerButton && issuesLayerButton.classList.contains('active')) {
-                    await toggleIssuesLayer();
-                }
-            } catch (error) {
-                alert(`Error: ${error.message}`);
-            } finally {
-                hideStatus();
-            }
-        }
-
-        async function showLeaderboard() {
-            ui.leaderboardModal.classList.remove('hidden');
-            const list = document.getElementById('leaderboard-list');
-            list.innerHTML = '<p>Loading...</p>';
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/rank`);
-                if (!response.ok) throw new Error('Failed to load leaderboard.');
-                const data = await response.json();
-                list.innerHTML = '';
-                if (data.length === 0) {
-                    list.innerHTML = '<p>No contributors yet.</p>';
-                    return;
-                }
-                data.forEach((user, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'leaderboard-item';
-                    item.innerHTML = `<div class="rank-number">#${index + 1}</div><div class="rank-name">${user.username}</div><div class="rank-points">${user.points} pts</div>`;
-                    list.appendChild(item);
-                });
-            } catch (error) {
-                list.innerHTML = `<p style="color: #dc3545;">Error: ${error.message}</p>`;
-            }
-        }
-        
         // =========================================================================
         // --- 5. UTILITY & HELPER FUNCTIONS ---
         // =========================================================================
