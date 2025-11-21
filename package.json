@@ -1,0 +1,6 @@
+{
+  "name": "sarawak-sar-risk-explorer-static",
+  "version": "1.0.0",
+  "description": "Static frontend for the SAR Risk Explorer",
+  "private": true
+}
