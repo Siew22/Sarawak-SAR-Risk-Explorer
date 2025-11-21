@@ -124,7 +124,7 @@ def run_on_click_analysis_task(task_id: str, request: OnClickAnalysisRequest):
         geom = ee.Geometry.Point([lon, lat]).buffer(buffer * 111320).bounds()
         res_payload = {}
         if a_type == 'flood':
-            a_date = (datetime.utcnow() - timedelta(days=15)).strftime('%Y-%m-%d')
+            a_date = (datetime.utcnow() - timedelta(days=60)).strftime('%Y-%m-%d')
             gee_res = gee_pro.analyze_flood_ultimate(geometry=geom, analysis_date=a_date)
             h_mask = gee_res['final_flood_mask']
             h_area_km2 = gee_pro.get_area_stats(h_mask, geom) / 1_000_000
