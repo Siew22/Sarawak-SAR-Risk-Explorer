@@ -1,0 +1,48 @@
+﻿# 文件名: .dockerignore
+
+# --- 核心忽略项 ---
+# Docker 相关文件
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# --- Python 虚拟环境 ---
+.venv
+venv
+env
+*.pyc
+*.pyo
+*.pyd
+
+# --- Python 缓存和构建产物 ---
+__pycache__/
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+
+# --- Git 相关 ---
+.git
+.gitignore
+
+# --- IDE/编辑器配置 ---
+.vscode/
+.idea/
+*.swp
+
+# --- 操作系统文件 ---
+.DS_Store
+Thumbs.db
+
+# --- 密钥和环境变量文件 (安全实践) ---
+# 尽管我们通过 docker-compose 注入 .env，但最好还是避免直接复制它
+.env
+
+# --- ngrok 配置文件 (可选，但推荐) ---
+# ngrok.yml 可以由 docker-compose 挂载，而不是复制
+ngrok.yml
+
+# --- 测试文件和数据 (如果适用) ---
+tests/
+*.db
+*.sqlite3

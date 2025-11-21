@@ -34,3 +34,4 @@ env/
 .qodo/
 *.DS_Store
 Thumbs.db
+.vercel

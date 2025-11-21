@@ -26,6 +26,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
+from fastapi.responses import FileResponse # <--- 新增引用
 
 # --- Project-Specific Modules (Both Projects) ---
 try:
@@ -61,6 +62,7 @@ if models and engine:
 app = FastAPI(title="JalanSafe & SAR Risk Explorer SUPER APP", version="3.3.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ==========================================================================
 # --- NASA GEO-INTEL MODULE (COMPLETE & UNOMITTED) ---
@@ -238,6 +240,10 @@ def get_all_reports(db: Session = Depends(get_db)):
 @app.get("/api/v1/reports/{report_id}/comments", response_model=List[schemas.Comment], tags=["JalanSafe AI - Contribution"])
 def get_comments(report_id: int, db: Session = Depends(get_db)):
     return crud.get_comments_for_report(db, report_id=report_id)
+
+@app.get("/", response_class=FileResponse) # <--- 修改这里
+async def read_root():
+    return "static/index.html" # <--- 让 APP 打开就看到地图
 
 class TrafficSimulationRequest(BaseModel):
     route_hash: str

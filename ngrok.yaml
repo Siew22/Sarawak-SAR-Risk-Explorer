@@ -1,10 +1,7 @@
+# 文件: C:\...\SAR\ngrok.yml
 version: "2"
-authtoken: ${NGROK_AUTHTOKEN}
-
 tunnels:
   backend-tunnel:
     proto: http
-    addr: app:8000 # 'app' is the service name from docker-compose
-    # [Ultimate CORS Fix] Let FastAPI handle CORS, ngrok only forwards.
-    # No header modifications needed here.
-    inspect: true
+    addr: app:8000 # 'app' 是 docker-compose 中的服务名
+    domain: juliette-unattempted-tammara.ngrok-free.dev
