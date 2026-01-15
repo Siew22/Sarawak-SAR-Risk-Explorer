@@ -24,3 +24,9 @@ requests
 schemas
 cryptography
 python-decouple
+
+streamlit
+protobuf==3.20.*
+streamlit-folium
+folium
+streamlit-autorefresh

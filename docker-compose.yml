@@ -1,22 +1,26 @@
-﻿# ===================================================================
-# FINAL & CORRECTED docker-compose.yml for JalanSafe Project
-# ADDED PERSISTENT STORAGE FOR UPLOADS
-# ===================================================================
-services:
+﻿services:
   app:
     build: .
     container_name: sar_backend_app
     restart: unless-stopped
     volumes:
-      # Mount GEE credentials
       - 'C:\Users\User\.config\earthengine:/root/.config/earthengine'
-      # [FINAL FIX] Mount the local 'uploads' folder to the container's '/app/uploads' folder
-      # This makes all uploaded photos persistent.
       - ./uploads:/app/uploads
+      # 建议加这行：把你当前的代码挂载进去，这样改 dashboard.py 不需要重建 Docker
+      - .:/app
+    # 🔥 修改 1: 必须暴露端口，否则你电脑浏览器打不开 Dashboard
+    ports:
+      - "8000:8000"  # API 端口
+      - "8501:8501"  # Streamlit Dashboard 端口
     env_file:
       - .env
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # 🔥 修改 2: 覆盖 Dockerfile 的默认命令，同时启动两个服务
+    # 使用 & 符号让 Streamlit 在后台跑，Uvicorn 在前台跑
+    command: >
+      sh -c "python -m streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0 & 
+             uvicorn main_professional:app --host 0.0.0.0 --port 8000 --proxy-headers"
 
   ngrok:
     image: ngrok/ngrok:latest
