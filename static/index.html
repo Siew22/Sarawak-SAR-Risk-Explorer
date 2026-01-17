@@ -162,22 +162,56 @@
             gap: 15px;
             pointer-events: auto; /* 恢复按钮的点击事件 */
         }
+        /* 1. 按钮基础样式：加大尺寸，增加立体感 */
         .map-button {
-            width: 54px; 
-            height: 54px; 
-            border-radius: 50%;
-            border: none; 
-            background: #0d6efd; 
+            width: 60px;  /* 稍微大一点，更像 App */
+            height: 60px;
+            border-radius: 50%; /* 完美的圆形 */
+            
+            /* 🔥 核心 1：3D 渐变背景 (模拟光照，左上亮，右下暗) */
+            background: linear-gradient(135deg, #4dabf7 0%, #0d6efd 100%);
+            
+            /* 🔥 核心 2：高光边框 (让按钮边缘锐利，像玻璃/塑料材质) */
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            
+            /* 🔥 核心 3：深邃投影 (让按钮浮起来) */
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6), 
+                        inset 0 1px 1px rgba(255, 255, 255, 0.5); /* 内部顶部反光 */
+            
             color: #fff;
-            font-size: 22px; 
-            cursor: pointer; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            display: flex; 
-            align-items: center; 
+            font-size: 24px; /* 图标放大 */
+            cursor: pointer;
+            
+            /* 布局居中 */
+            display: flex;
+            align-items: center;
             justify-content: center;
-            transition: transform 0.2s;
+            
+            /* 动画过渡 */
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弹性动画 */
+            
+            /* 防止点击时蓝色高亮框 */
+            -webkit-tap-highlight-color: transparent;
         }
-        .map-button:hover { transform: scale(1.1); }
+        /* 2. 悬停效果 (电脑端鼠标放上去时) */
+        .map-button:hover {
+            transform: translateY(-4px) scale(1.05); /* 向上浮动 + 变大 */
+            box-shadow: 0 16px 30px rgba(13, 110, 253, 0.4); /* 增加蓝色光晕 */
+            filter: brightness(1.1); /* 稍微变亮 */
+        }
+
+        /* 3. 点击按压效果 (非常有手感) */
+        .map-button:active {
+            transform: translateY(2px) scale(0.95); /* 被按下去 */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* 阴影变小 */
+            background: linear-gradient(135deg, #0a58ca 0%, #0d6efd 100%); /* 颜色变深 */
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 4. 确保图标有微微的阴影，增加层次感 */
+        .map-button i {
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+        }
 
         /* --- 6. Results Display --- */
         .location-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: #fff; }
