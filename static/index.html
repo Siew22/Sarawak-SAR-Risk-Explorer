@@ -648,7 +648,6 @@
             const findMeBtn = document.getElementById('find-me-btn');
             if (findMeBtn) {
                 findMeBtn.addEventListener('click', handleWebFindMe);
-            }
 
             // 2. 原有的所有按钮 (不要把它们关在门外！)
             ui.switchGeoIntelBtn.addEventListener('click', () => switchMainMode('geointel'));
@@ -703,7 +702,7 @@
             map.on('click', handleMapClick);
             map.on('moveend', updateLiveTemperatures);
             map.on('zoomend', updateLiveTemperatures);
-        } // <--- 正确的结束位置在这里！
+        }} // <--- 正确的结束位置在这里！
 
         // 3.1 Web 端专用的 Find Me 逻辑
         // ==========================================
