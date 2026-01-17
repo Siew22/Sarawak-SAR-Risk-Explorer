@@ -9,12 +9,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 
-    .map-tiles {
-            /* 稍微带点蓝色的深色科技风 */
+    <style>
+        /* --- 放在 style 标签的第一行 --- */
+        .map-tiles {
             filter: grayscale(100%) invert(1) brightness(0.7) contrast(1.3) hue-rotate(200deg) saturate(0.3);
         }
-
-    <style>
         /* --- 1. Basic Layout --- */
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; background: #1a1a1a; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
         #map { position: absolute; top: 0; left: 0; height: 100%; width: 100%; z-index: 1; }
@@ -305,9 +304,6 @@
         
         @keyframes fadeIn { from { opacity: 0; background-color: rgba(40, 167, 69, 0.3); transform: translateY(10px); } to { opacity: 1; background-color: transparent; transform: translateY(0); } }
         .new-comment-highlight { animation: fadeIn 0.8s ease-out forwards; }
-
-        🚀 UI 2.0: 现代深色磨砂风格升级补丁
-           ========================================= */
 
         /* 1. 全局字体优化 - 让字体在手机上更清晰 */
         body {
@@ -620,12 +616,13 @@
         }
 
         function setupEventListeners() {
-            // 🔥 新增：绑定 Find Me 按钮
+            // 1. Find Me 按钮
             const findMeBtn = document.getElementById('find-me-btn');
             if (findMeBtn) {
                 findMeBtn.addEventListener('click', handleWebFindMe);
             }
-        }
+
+            // 2. 原有的所有按钮 (不要把它们关在门外！)
             ui.switchGeoIntelBtn.addEventListener('click', () => switchMainMode('geointel'));
             ui.switchJalanSafeBtn.addEventListener('click', () => switchMainMode('jalansafe'));
             ui.geointelSearchButton.addEventListener('click', handleGeoIntelSearch);
@@ -678,7 +675,7 @@
             map.on('click', handleMapClick);
             map.on('moveend', updateLiveTemperatures);
             map.on('zoomend', updateLiveTemperatures);
-        }
+        } // <--- 正确的结束位置在这里！
 
         // 3.1 Web 端专用的 Find Me 逻辑
         // ==========================================
