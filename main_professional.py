@@ -21,12 +21,15 @@ from datetime import datetime, timedelta
 import traceback
 
 # --- FastAPI, SQLAlchemy & Pydantic Libraries ---
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from fastapi.responses import FileResponse # <--- 新增引用
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
+from haversine import haversine, Unit
 
 # --- Project-Specific Modules (Both Projects) ---
 try:
@@ -63,6 +66,39 @@ app = FastAPI(title="JalanSafe & SAR Risk Explorer SUPER APP", version="3.3.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# ==========================================================
+# 🔥 新增：照片 EXIF GPS 解码器
+# ==========================================================
+def get_decimal_from_dms(dms, ref):
+    degrees = dms[0]
+    minutes = dms[1] / 60.0
+    seconds = dms[2] / 3600.0
+    if ref in ['S', 'W']:
+        degrees = -degrees
+        minutes = -minutes
+        seconds = -seconds
+    return degrees + minutes + seconds
+
+def get_photo_gps(exif_data):
+    if not exif_data:
+        return None
+    
+    geotagging = {}
+    for (idx, tag) in TAGS.items():
+        if tag == 'GPSInfo':
+            if idx not in exif_data:
+                return None
+            for (key, val) in GPSTAGS.items():
+                if key in exif_data[idx]:
+                    geotagging[val] = exif_data[idx][key]
+    
+    if 'GPSLatitude' in geotagging and 'GPSLongitude' in geotagging:
+        lat = get_decimal_from_dms(geotagging['GPSLatitude'], geotagging.get('GPSLatitudeRef'))
+        lon = get_decimal_from_dms(geotagging['GPSLongitude'], geotagging.get('GPSLongitudeRef'))
+        return (lat, lon)
+    return None
+# ==========================================================
 
 # ==========================================================================
 # --- NASA GEO-INTEL MODULE (COMPLETE & UNOMITTED) ---
@@ -201,13 +237,52 @@ def get_smart_routes_by_name(request: schemas.RouteRequestByName, db: Session = 
     smart_routes = services.calculate_ai_smart_routes(routes, db) 
     return smart_routes
 
+# 🔥 升级版：带 EXIF GPS 安全验证
 @app.post("/api/v1/reports", response_model=schemas.Report, status_code=201, tags=["JalanSafe AI - Contribution"])
 async def create_new_report(db: Session = Depends(get_db), photo: UploadFile = File(...), user_id: int = Form(...), latitude: float = Form(...), longitude: float = Form(...), report_type: ReportTypeEnum = Form(...), description: str = Form(...)):
-    upload_dir = "uploads"; os.makedirs(upload_dir, exist_ok=True)
+    # --- 1. 原本的图片保存逻辑 (保持不变) ---
+    upload_dir = "uploads"
+    os.makedirs(upload_dir, exist_ok=True)
     file_ext = os.path.splitext(photo.filename)[1]
     unique_fn = f"{user_id}_{int(datetime.utcnow().timestamp())}{file_ext}"
     file_path = os.path.join(upload_dir, unique_fn)
-    with open(file_path, "wb") as buffer: shutil.copyfileobj(photo.file, buffer)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(photo.file, buffer)
+
+    # --- 2. 🔥 新增：EXIF 安全检查站 🔥 ---
+    try:
+        image = Image.open(file_path)
+        exif_data = image._getexif()
+
+        if not exif_data:
+            # 如果照片被压缩过（比如微信传的），没有 EXIF 信息，就跳过检查
+            print("Warning: No EXIF data found. Skipping GPS validation.")
+        else:
+            photo_gps = get_photo_gps(exif_data)
+            
+            if photo_gps:
+                app_gps = (latitude, longitude)
+                
+                # 计算 App 传来的坐标和照片自带的坐标之间的距离
+                distance = haversine(photo_gps, app_gps, unit=Unit.METERS)
+                
+                print(f"GPS Validation: App says ({app_gps}), Photo says ({photo_gps}). Distance: {distance:.2f} meters.")
+                
+                # 如果距离超过 100 米，就认为是作弊
+                if distance > 100:
+                    raise HTTPException(status_code=400, detail=f"Location mismatch detected ({distance:.0f}m). Please use a photo taken at the reported location.")
+            else:
+                # 如果照片有 EXIF 但没有 GPS 信息，也跳过
+                print("Warning: Photo has EXIF but no GPS Info. Skipping validation.")
+
+    except HTTPException as http_exc:
+        # 如果是我们的主动报错，直接抛出
+        raise http_exc
+    except Exception as e:
+        # 如果 Pillow 库解析失败（比如图片格式不支持），就打印一个警告，然后继续
+        print(f"EXIF validation failed with error: {e}. Proceeding without validation.")
+
+    # --- 3. 原本的数据库写入逻辑 (保持不变) ---
     report_data = schemas.ReportCreate(user_id=user_id, latitude=latitude, longitude=longitude, report_type=report_type, description=description, photo_url=file_path)
     return crud.create_report(db=db, report=report_data)
 
@@ -275,6 +350,26 @@ def clear_traffic(req: ClearTrafficRequest, db: Session = Depends(get_db)):
     ).delete()
     db.commit()
     return {"message": f"Traffic cleared for route {req.route_hash[:8]}..."}
+
+# ==========================================
+# 🔥 补丁：删除 Report 的接口
+# ==========================================
+@app.delete("/api/v1/reports/{report_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["JalanSafe AI - Contribution"])
+def delete_report(report_id: int, db: Session = Depends(get_db)):
+    # 1. 在数据库里找这个 Report
+    report_query = db.query(models.Report).filter(models.Report.id == report_id)
+    report = report_query.first()
+
+    # 2. 如果找不到，返回 404
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    # 3. 执行删除
+    # 注意：这里我们直接操作数据库，没有经过 crud.py，这样你不需要改 crud.py 文件
+    db.delete(report)
+    db.commit()
+    
+    return None
 
 # --- Main App Runner ---
 if __name__ == "__main__":

@@ -392,6 +392,26 @@
         <div id="radar-timestamp"></div>
     </div>
 
+    <!-- 新增：上报方式选择菜单 -->
+    <div id="report-choice-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <button class="modal-close-button">&times;</button>
+            <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-clipboard-question"></i> Select Action</h3>
+            
+            <button id="choice-report-now" style="width: 100%; padding: 15px; margin-bottom: 15px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                <i class="fa-solid fa-person-seat"></i> I'm a Passenger (Report Now)
+            </button>
+
+            <button id="choice-save-draft" style="width: 100%; padding: 15px; background: #ffc107; color: #333; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                <i class="fa-solid fa-floppy-disk"></i> Driving (Save Draft)
+            </button>
+            
+            <p style="font-size: 12px; color: #888; margin-top: 15px;">
+                Drafts save your GPS location so you can fill in details later.
+            </p>
+        </div>
+    </div>
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -702,9 +722,14 @@
             });
         }
 
+        // 1. 渲染 Popup 内容 (Web端修复版：含删除、宽容分类、防缓存)
+        // ==========================================
         async function renderPopupContent(reportId) {
             const container = document.getElementById(`popup-content-${reportId}`);
             if (!container) return;
+
+            // 显示 Loading 状态
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#ccc;"><i class="fa-solid fa-spinner fa-spin"></i> Loading details...</div>`;
 
             try {
                 const numericReportId = parseInt(reportId, 10);
@@ -714,24 +739,43 @@
                     return;
                 }
 
-                // [FINAL FIX] - Use the fetchApi wrapper
-                const commentsResponse = await fetchApi(`${API_BASE_URL}/api/v1/reports/${reportId}/comments`);
-                if (!commentsResponse.ok) throw new Error("Could not load comments.");
-                const comments = await commentsResponse.json();
+                // 🔥 修改 1: 加时间戳 _t=${Date.now()} 防止浏览器缓存，保证看到最新评论
+                const commentsResponse = await fetchApi(`${API_BASE_URL}/api/v1/reports/${reportId}/comments?_t=${Date.now()}`);
+                const comments = commentsResponse.ok ? await commentsResponse.json() : [];
 
                 const imageUrl = issue.photo_url.replace(/\\/g, '/');
                 const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}/${imageUrl}`;
 
-                const agreeComments = comments.filter(c => c.vote === 'agree');
-                const disagreeComments = comments.filter(c => c.vote === 'disagree');
+                // 🔥 修改 2: 宽容的分类逻辑 (忽略大小写，包含关键词即可)
+                const normalizeVote = (v) => v ? String(v).toLowerCase().trim() : 'unknown';
+                const getVoteType = (c) => {
+                    const v = normalizeVote(c.vote);
+                    if (v.includes('disagree')) return 'disagree';
+                    if (v.includes('agree')) return 'agree';
+                    return 'unknown';
+                };
 
-                let agreeHtml = agreeComments.map(c => `<li><strong>${c.owner.username}:</strong> ${c.comment_text}</li>`).join('');
-                let disagreeHtml = disagreeComments.map(c => `<li><strong>${c.owner.username}:</strong> ${c.comment_text}</li>`).join('');
+                const agreeComments = comments.filter(c => getVoteType(c) === 'agree');
+                const disagreeComments = comments.filter(c => getVoteType(c) === 'disagree');
+                // 把无法分类的评论也抓出来显示
+                const otherComments = comments.filter(c => getVoteType(c) === 'unknown');
 
+                // 辅助函数：生成列表 HTML
+                const generateListHtml = (listData, showDebug = false) => {
+                    if (!listData || listData.length === 0) return '';
+                    return listData.map(c => {
+                        let name = c.owner?.username || c.username || "Anonymous";
+                        // 如果无法分类，显示红色原数据方便调试
+                        const debugInfo = (showDebug && c.vote) ? `<span style="color:#ff6b6b; font-size:10px;">(Raw: "${c.vote}")</span>` : '';
+                        return `<li style="margin-bottom: 4px;"><strong>${name}:</strong> ${c.comment_text} ${debugInfo}</li>`;
+                    }).join('');
+                };
+
+                // 表单逻辑
                 const totalComments = comments.length;
                 let formHtml = '';
                 if (totalComments >= 10) {
-                    formHtml = `<p style="text-align: center; color: #aaa; font-size: 12px;">Maximum number of comments (10) has been reached.</p>`;
+                    formHtml = `<div style="background: rgba(255,193,7,0.2); border:1px solid #ffc107; color:#ffc107; padding:10px; border-radius:6px; text-align:center; font-size:12px; margin-bottom:10px;"><i class="fa-solid fa-lock"></i> Discussion closed.</div>`;
                 } else {
                     formHtml = `
                         <form class="comment-form" data-report-id="${issue.id}">
@@ -744,23 +788,46 @@
                     `;
                 }
 
+                // 🔥 修改 3: 如果当前用户是发布者 (User ID 1)，显示删除按钮
+                const currentUserId = 1; 
+                let deleteButtonHtml = '';
+                if (issue.user_id === currentUserId) {
+                    deleteButtonHtml = `
+                        <hr style="border-top: 1px solid #444; margin: 15px 0;">
+                        <button id="btn-delete-${issue.id}" style="width: 100%; background-color: #333; border: 1px solid #dc3545; color: #dc3545; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s;">
+                            <i class="fa-solid fa-trash"></i> Delete Report
+                        </button>
+                    `;
+                }
+
                 container.innerHTML = `
                     <h5 style="text-transform: capitalize; margin: 0 0 5px 0;">${issue.report_type.replace('_', ' ')}</h5>
                     <p style="margin: 0 0 10px 0; font-size: 12px;">${issue.description}</p>
                     <img src="${fullImageUrl}" style="width: 100%; border-radius: 4px;" alt="Issue photo"/>
                     <small style="display: block; text-align: right; color: #888; margin-top: 5px;">Reported on ${new Date(issue.created_at).toLocaleDateString()}</small>
                     <hr style="border-top: 1px solid #444; margin: 10px 0;">
-                    <h6 style="margin: 0 0 10px 0;">Community Feedback</h6>
-                    ${formHtml}
+                    
+                    <h6 style="margin: 0 0 10px 0;">Community Feedback (<span id="total-count-${issue.id}">${totalComments}</span>/10)</h6>
+                    <div id="form-container-${issue.id}">${formHtml}</div>
+
                     <div class="comments-display" style="margin-top: 15px;">
-                        ${agreeHtml ? `<h6>Agreed:</h6><ul class="agree-list" style="padding-left: 20px; margin: 5px 0;">${agreeHtml}</ul>` : ''}
-                        ${disagreeHtml ? `<h6>Disagreed:</h6><ul class="disagree-list" style="padding-left: 20px; margin: 5px 0;">${disagreeHtml}</ul>` : ''}
-                    </div>`;
+                        ${agreeComments.length > 0 ? `<div><h6>Agreed:</h6><ul class="agree-list" style="padding-left: 20px; font-size:13px; color:#ccc;">${generateListHtml(agreeComments)}</ul></div>` : ''}
+                        ${disagreeComments.length > 0 ? `<div><h6>Disagreed:</h6><ul class="disagree-list" style="padding-left: 20px; font-size:13px; color:#ccc;">${generateListHtml(disagreeComments)}</ul></div>` : ''}
+                        ${otherComments.length > 0 ? `<div><h6>General:</h6><ul class="other-list" style="padding-left: 20px; font-size:13px; color:#aaa;">${generateListHtml(otherComments, true)}</ul></div>` : ''}
+                    </div>
+
+                    ${deleteButtonHtml}
+                `;
                 
                 const form = container.querySelector('.comment-form');
-                if (form) {
-                    form.addEventListener('submit', handleCommentSubmit);
+                if (form) form.addEventListener('submit', handleCommentSubmit);
+
+                // 🔥 绑定删除按钮事件
+                const deleteBtn = document.getElementById(`btn-delete-${issue.id}`);
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', () => handleDeleteReport(issue.id));
                 }
+
             } catch (error) {
                 container.innerHTML = `Error loading details: ${error.message}`;
             }
@@ -772,16 +839,13 @@
             const reportId = form.dataset.reportId;
             const commentText = form.querySelector('textarea[name="comment_text"]').value;
             const vote = event.submitter.value;
-            
             const submitterButton = event.submitter;
             const originalButtonText = submitterButton.textContent;
 
-            const currentCountMatch = originalButtonText.match(/\((\d+)\)/);
-            if (!currentCountMatch) {
-                console.error("Could not parse comment count:", originalButtonText);
-                return;
-            }
-            const currentCount = parseInt(currentCountMatch[1], 10);
+            // 简单的计数提取
+            let currentCount = 0;
+            const match = originalButtonText.match(/\d+/);
+            if(match) currentCount = parseInt(match[0], 10);
 
             form.querySelectorAll('button').forEach(btn => btn.disabled = true);
             submitterButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -793,7 +857,6 @@
                     vote: vote
                 };
 
-                // [FINAL FIX] - Use the fetchApi wrapper
                 const response = await fetchApi(`${API_BASE_URL}/api/v1/reports/${reportId}/comments`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -802,36 +865,99 @@
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.detail || "Failed to submit comment.");
+                    throw new Error(errorData.detail || "Failed to submit.");
                 }
                 
                 const newComment = await response.json();
 
+                // --- 1. 实时更新总数 ---
+                const countSpan = document.getElementById(`total-count-${reportId}`);
+                let currentTotal = parseInt(countSpan.innerText, 10) + 1;
+                countSpan.innerText = currentTotal;
+
+                // --- 2. 实时插入新评论 ---
                 form.querySelector('textarea[name="comment_text"]').value = '';
-                const listContainer = document.querySelector(`#popup-content-${reportId} .comments-display`);
-                const listSelector = `.${vote}-list`;
-                let list = listContainer.querySelector(listSelector);
                 
+                // 找到对应的列表区域
+                const sectionId = vote === 'agree' ? `agree-section-${reportId}` : `disagree-section-${reportId}`;
+                let sectionDiv = document.getElementById(sectionId);
+                let list = sectionDiv.querySelector('ul');
+                
+                // 如果列表还不存在（这是该分类的第一条），需要先创建结构
                 if (!list) {
-                    const listTitle = vote === 'agree' ? 'Agreed' : 'Disagreed';
-                    listContainer.insertAdjacentHTML('beforeend', `<h6>${listTitle}:</h6><ul class="${vote}-list" style="padding-left: 20px; margin: 5px 0;"></ul>`);
-                    list = listContainer.querySelector(listSelector);
+                     const title = vote === 'agree' ? 'Agreed' : 'Disagreed';
+                     sectionDiv.innerHTML = `<h6>${title}:</h6><ul class="${vote}-list" style="padding-left: 20px; font-size:13px; color:#ccc;"></ul>`;
+                     list = sectionDiv.querySelector('ul');
                 }
                 
                 const newLi = document.createElement('li');
-                const currentUsername = newComment.owner.username || "testuser"; 
-                newLi.innerHTML = `<strong>${currentUsername}:</strong> ${newComment.comment_text}`;
-                newLi.classList.add('new-comment-highlight');
+                newLi.style.marginBottom = "4px";
+                const name = newComment.owner?.username || "You";
+                newLi.innerHTML = `<strong>${name}:</strong> ${newComment.comment_text}`;
+                newLi.classList.add('new-comment-highlight'); // 闪烁动画
                 list.appendChild(newLi);
 
-                const button = form.querySelector(`button[value="${vote}"]`);
-                button.textContent = `${vote.charAt(0).toUpperCase() + vote.slice(1)} (${currentCount + 1})`;
+                // --- 3. 更新按钮数字 ---
+                // 只有当没满10条时，才更新按钮文字，因为满10条表单就消失了
+                if (currentTotal < 10) {
+                     submitterButton.innerHTML = `${vote === 'agree' ? 'Agree' : 'Disagree'} (${currentCount + 1})`;
+                     form.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                } else {
+                    // --- 4. 🔥 满 10 条，立刻锁死表单 ---
+                    const formContainer = document.getElementById(`form-container-${reportId}`);
+                    formContainer.innerHTML = `
+                        <div style="background: rgba(255, 193, 7, 0.2); border: 1px solid #ffc107; color: #ffc107; padding: 10px; border-radius: 6px; text-align: center; font-size: 12px; margin-bottom: 10px;">
+                            <i class="fa-solid fa-lock"></i> Discussion closed (Max 10 reached).
+                        </div>
+                    `;
+                }
 
             } catch (error) {
                 alert(`Error: ${error.message}`);
-            } finally {
                 form.querySelectorAll('button').forEach(btn => btn.disabled = false);
-                submitterButton.textContent = originalButtonText.replace(`(${currentCount})`, `(${currentCount + 1})`);
+                submitterButton.textContent = originalButtonText;
+            }
+        }
+
+        async function handleDeleteReport(reportId) {
+            if (!confirm("⚠️ Are you sure you want to delete this report?\nThis action cannot be undone.")) {
+                return;
+            }
+
+            const btn = document.getElementById(`btn-delete-${reportId}`);
+            if (btn) {
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+                btn.disabled = true;
+            }
+
+            try {
+                // 使用 fetchApi 确保通过 ngrok
+                const response = await fetchApi(`${API_BASE_URL}/api/v1/reports/${reportId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    // 如果是 404，可能是后端没写 DELETE 接口
+                    const errorText = await response.text(); 
+                    throw new Error(`Server Error: ${errorText || response.statusText}`);
+                }
+
+                alert("✅ Report deleted successfully.");
+                map.closePopup();
+
+                // 刷新图层，让被删的图标消失
+                const issuesLayerButton = document.querySelector('.layer-item[data-layer-id="issues"]');
+                if (issuesLayerButton && issuesLayerButton.classList.contains('active')) {
+                    await toggleIssuesLayer(); // 关
+                    await toggleIssuesLayer(); // 开 (刷新)
+                }
+
+            } catch (error) {
+                alert(`Delete Failed: ${error.message}`);
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete Report';
+                    btn.disabled = false;
+                }
             }
         }
         
@@ -841,18 +967,29 @@
         function switchMainMode(mode) {
             if (currentMainMode === mode) return;
             currentMainMode = mode;
-            fullReset();
             
+            // 🔥 修改 1: 切换到 GeoIntel 时，强制清理 JalanSafe 的所有痕迹
             if (mode === 'geointel') {
                 ui.switchGeoIntelBtn.classList.add('active');
                 ui.switchJalanSafeBtn.classList.remove('active');
                 ui.geoIntelPanel.classList.remove('hidden');
                 ui.jalanSafePanel.classList.add('hidden');
+
+                // 强制清理路线和标记
+                clearRouteLayers(); 
+                if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
+                if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
+                ui.routeResultsPanel.innerHTML = ''; 
+                document.getElementById('nav-hud').style.display = 'none';
+
+                fullReset(false); // 软重置
             } else if (mode === 'jalansafe') {
                 ui.switchGeoIntelBtn.classList.remove('active');
                 ui.switchJalanSafeBtn.classList.add('active');
                 ui.geoIntelPanel.classList.add('hidden');
                 ui.jalanSafePanel.classList.remove('hidden');
+                
+                fullReset(false); // 软重置
             }
         }
 
@@ -1062,18 +1199,77 @@
             }
         }
     
-        async function handleReportButtonClick() {
-           if (currentMainMode !== 'jalansafe') { switchMainMode('jalansafe'); }
-           showStatus("Getting your current location...");
-           navigator.geolocation.getCurrentPosition((position) => {
-               hideStatus();
-               const { latitude, longitude } = position.coords;
-               openReportModal(latitude, longitude);
-           }, (error) => {
-               hideStatus();
-               console.error(`Could not get GPS location: ${error.message}`);
-               alert('Could not get your current location. Please ensure location services are enabled for your browser.');
-           }, { enableHighAccuracy: true });
+        // 2. 上报按钮逻辑 (Web端同步：草稿 + 选择菜单)
+        // ==========================================
+        async function handleReportButtonClick(e) {
+            if (e) e.stopPropagation();
+            if (currentMainMode !== 'jalansafe') { switchMainMode('jalansafe'); }
+
+            // 1. 检查是否有未完成的草稿
+            const savedDraft = localStorage.getItem('jalanSafeDraft');
+            if (savedDraft) {
+                if (confirm("You have a saved draft. Continue reporting from that location?")) {
+                    const draft = JSON.parse(savedDraft);
+                    localStorage.removeItem('jalanSafeDraft'); // 用完就删
+                    openReportModal(draft.lat, draft.lon);
+                    return;
+                } else {
+                    localStorage.removeItem('jalanSafeDraft'); // 用户选择不使用，清除旧的
+                }
+            }
+
+            // 2. 显示选择菜单 (Report Now vs Save Draft)
+            document.getElementById('report-choice-modal').classList.remove('hidden');
+        }
+
+        // --- 绑定选择菜单的事件 (请确保这段代码只运行一次，或者放在 setupEventListeners 里) ---
+        // 为了方便，你可以直接把这两个监听器放在 handleReportButtonClick 下面，或者放在 setupEventListeners 函数里
+        
+        document.getElementById('choice-report-now').addEventListener('click', () => {
+            document.getElementById('report-choice-modal').classList.add('hidden');
+            performWebGeolocation('live');
+        });
+
+        document.getElementById('choice-save-draft').addEventListener('click', () => {
+            document.getElementById('report-choice-modal').classList.add('hidden');
+            performWebGeolocation('draft');
+        });
+
+        // 辅助函数：Web 端获取 GPS 并处理
+        function performWebGeolocation(mode) {
+            showStatus(mode === 'draft' ? "Saving GPS for draft..." : "Getting location...");
+            
+            if (!navigator.geolocation) {
+                hideStatus();
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition((position) => {
+                hideStatus();
+                const { latitude, longitude } = position.coords;
+                
+                // 1. 画蓝点 & 移动地图
+                if (userMarker) map.removeLayer(userMarker);
+                userMarker = L.circleMarker([latitude, longitude], {
+                    radius: 8, color: '#ffffff', weight: 2, opacity: 1, fillColor: '#0d6efd', fillOpacity: 1
+                }).addTo(map);
+                map.setView([latitude, longitude], 16);
+
+                // 2. 根据模式处理
+                if (mode === 'draft') {
+                    const draft = { lat: latitude, lon: longitude, time: new Date().toISOString() };
+                    localStorage.setItem('jalanSafeDraft', JSON.stringify(draft));
+                    alert("✅ Draft Saved!\nLocation recorded. Click '+' again later to finish.");
+                } else {
+                    openReportModal(latitude, longitude);
+                }
+
+            }, (error) => {
+                hideStatus();
+                console.error(`GPS Error: ${error.message}`);
+                alert('Could not get location. Please ensure permission is granted.');
+            }, { enableHighAccuracy: true, timeout: 10000 });
         }
 
         async function openReportModal(lat, lon) {
@@ -1465,17 +1661,58 @@
             }
 
             let html = `<h5><i class="fa-solid fa-camera"></i> User Reports (Evidence)</h5>`;
-            issues.forEach(issue => {
-                const fixedPhotoUrl = (issue.photo_url || '').replace(/\\/g, '/');
-                const imageUrl = fixedPhotoUrl.startsWith('http') ? fixedPhotoUrl : `${API_BASE_URL}/${fixedPhotoUrl}`;
+            issues.forEach((issue, index) => {
+                // 给每个图片一个唯一 ID，且先不设置 src，只显示 Loader
+                const imgId = `route-ev-img-${issue.id || index}`;
+                // 计算 URL
+                const rawUrl = (issue.photo_url || '').replace(/\\/g, '/');
+                const fullUrl = rawUrl.startsWith('http') ? rawUrl : `${API_BASE_URL}/${rawUrl}`;
+                
                 html += `
                     <div style="background: rgba(255,255,255,0.1); padding:10px; border-radius:6px; margin-bottom:10px;">
                         <div style="font-size:11px; color:#aaa; margin-bottom:5px;">Type: ${issue.type || 'Unknown'} | Date: ${issue.date || 'N/A'}</div>
                         <p style="margin:0 0 5px 0; font-style:italic;">"${issue.description || 'No description'}"</p>
-                        <img src="${imageUrl}" alt="Report Image" style="width: 100%; max-height: 150px; object-fit: cover; border-radius: 4px;"/>
+                        
+                        <div style="min-height: 150px; background: #222; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                            <img id="${imgId}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 4px; display: none;" alt="Loading..."/>
+                            <span id="${imgId}-loader" style="color: #888; font-size: 12px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading Image...</span>
+                        </div>
                     </div>`;
+
+                // 🔥 触发异步加载 (类似我们在 renderPopupContent 做的那样)
+                // 注意：这里我们立即调用 loadSecureImage，因为 HTML 还没插入 DOM，可能会找不到元素
+                // 所以我们得把 loadSecureImage 的调用推迟到 showRouteDetails 插入 HTML 之后
+                // 暂时先把 URL 存在 dataset 里
+                setTimeout(() => {
+                    // 这个 setTimeout 是为了确保 HTML 已经渲染到页面上
+                    loadSecureImage(fullUrl, imgId).then(() => {
+                         const loader = document.getElementById(`${imgId}-loader`);
+                         if(loader) loader.style.display = 'none';
+                    });
+                }, 100);
             });
             return html;
+        }
+
+        async function loadSecureImage(url, imgId) {
+            try {
+                const imgElement = document.getElementById(imgId);
+                if (!imgElement) return;
+                const response = await fetchApi(url);
+                if (!response.ok) throw new Error('Image load failed');
+                const blob = await response.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                imgElement.src = objectUrl;
+                imgElement.style.display = 'block';
+            } catch (e) {
+                console.warn("Failed to load secure image:", e);
+                const imgElement = document.getElementById(imgId);
+                if(imgElement) {
+                     // 失败时给个默认图或者错误提示
+                     imgElement.alt = "Failed to load";
+                     imgElement.style.display = 'block';
+                }
+            }
         }
         
         // =========================================================================
