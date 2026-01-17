@@ -601,7 +601,25 @@
         const issueLayerGroup = L.layerGroup();
         let issuesData = null;
         let isInResultView = false;
+        let analysisAbortController = null;
+        // 🔥🔥🔥 1. 新增：用于取消请求的控制器 (补上这个) 🔥🔥🔥
         let analysisAbortController = null; 
+
+        // 🔥🔥🔥 2. 新增：取消函数 (补上这个) 🔥🔥🔥
+        function cancelCurrentAnalysis() {
+            if (analysisAbortController) {
+                analysisAbortController.abort(); // 掐断网络请求
+                analysisAbortController = null;
+                hideStatus(); // 关掉 Loading 界面
+                console.log("Analysis cancelled by user.");
+                
+                // 可选：把地图上那个点击生成的图钉也删掉
+                if (clickMarker) {
+                    map.removeLayer(clickMarker);
+                    clickMarker = null;
+                }
+            }
+        }
 
         const ui = {
             controlPanel: document.getElementById('control-panel'),
@@ -723,11 +741,12 @@
             
             document.addEventListener("keydown", e => {
                 if (e.key === "Escape") {
-                    // 🔥 优先级 1：如果正在加载/分析，按 ESC 取消分析
+                    // 🔥 优先级 1：检查 Loading 遮罩层是否显示
                     const overlay = document.getElementById('status-overlay');
+                    // 注意：你的 CSS 里 showStatus 是设为 'flex'，所以这里检查它不是 'none'
                     if (overlay && overlay.style.display !== 'none') {
-                        cancelCurrentAnalysis();
-                        return; // 取消后不再执行下面的关闭弹窗逻辑
+                        cancelCurrentAnalysis(); // 执行取消
+                        return; // 阻止后续代码执行
                     }
 
                     // 优先级 2：关闭普通弹窗
@@ -1317,47 +1336,49 @@
         }
 
         async function triggerGeoIntelAnalysis(lat, lon, locationName) {
-            // 1. 如果之前有还在跑的任务，先取消掉
-            if (analysisAbortController) {
-                analysisAbortController.abort();
-            }
-            // 2. 创建新的控制器
+            // 1. 如果有旧任务，先取消
+            if (analysisAbortController) analysisAbortController.abort();
+            
+            // 2. 创建新控制器
             analysisAbortController = new AbortController();
             const signal = analysisAbortController.signal;
 
-            // 提示用户可以按 ESC
-            showStatus(`Analyzing ${locationName}... <br><span style="font-size:12px; opacity:0.8">(Press ESC to Cancel)</span>`);
+            // 3. 显示带有提示的 Loading
+            showStatus(`Analyzing ${locationName}... <br><span style="font-size:12px; opacity:0.8; margin-top:5px; display:block;">(Press ESC to Cancel)</span>`);
             
             try {
                 const payload = { lat, lon, buffer_degree: 0.1, analysis_type: currentGeoIntelMode };
                 
-                // 🔥 注意：在 fetchApi 的第二个参数里加上 signal
+                // 🔥 发送请求时带上 signal
                 const submitResponse = await fetchApi(`${API_BASE_URL}/api/v9/analyze`, { 
                     method: "POST", 
                     headers: { "Content-Type": "application/json" }, 
                     body: JSON.stringify(payload),
-                    signal: signal // 绑定信号
+                    signal: signal // <--- 关键点
                 });
 
                 if (!submitResponse.ok) throw new Error(`API submit failed with status ${submitResponse.status}`);
                 const submitData = await submitResponse.json();
                 const statusUrl = `${API_BASE_URL}${submitData.status_endpoint}`;
                 
+                // 轮询函数
                 const pollStatus = async (url) => {
-                    // 🔥 轮询请求也要绑定 signal
+                    // 如果中途被取消，这里会抛出 AbortError
+                    if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
                     const statusResponse = await fetchApi(url, { signal: signal });
                     const statusData = await statusResponse.json();
                     
                     if (statusData.status === "COMPLETED" || statusData.status === "FAILED") return statusData;
                     
-                    // 等待 2秒 (如果 signal 被中止，这里不会继续执行后续请求)
+                    // 等待 2秒 (如果期间按了 ESC，会在下一次循环或 fetch 时报错停止)
                     await new Promise(resolve => setTimeout(resolve, 2000));
                     return pollStatus(url);
                 };
                 
                 const finalResult = await pollStatus(statusUrl);
                 
-                // 任务完成，清空控制器
+                // 成功完成后，清空控制器
                 analysisAbortController = null;
                 hideStatus();
 
@@ -1368,15 +1389,16 @@
                     throw new Error(finalResult.result.error || "Analysis task failed.");
                 }
             } catch (e) {
-                // 🔥 捕获取消错误，不弹窗报错
+                // 🔥 捕获取消动作，静默退出，不弹错误窗
                 if (e.name === 'AbortError') {
                     console.log("Fetch aborted cleanly.");
                     hideStatus();
-                    return; // 直接退出，不执行下面的 alert
+                    return; 
                 }
 
                 hideStatus();
                 showActionTooltip(`Analysis Error: ${e.message}`);
+                // 出错后做一次软重置
                 fullReset(false);
                 analysisAbortController = null;
             }
