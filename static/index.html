@@ -398,21 +398,39 @@
         }
         /* 覆盖原本的遮罩层，让它变成全屏深色 */
         #status-overlay {
-            position: fixed !important; 
+            /* 1. 确保它在所有图层最上面 */
+            z-index: 2147483647 !important; /* CSS 允许的最大值 */
+            
+            /* 2. 强制全屏固定 */
+            position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            background: rgba(0, 0, 0, 0.85) !important; /* 背景黑一点，突出文字 */
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: none;
-            justify-content: center; /* 水平居中 */
-            align-items: center;     /* 垂直居中 */
-            z-index: 9999 !important;
-            transform: none !important; 
+            
+            /* 3. 只有 active 时才显示 flex，平时 none */
+            display: none; 
+            
+            /* 4. 居中对齐 */
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            
+            /* 5. 深色半透明背景 */
+            background: rgba(0, 0, 0, 0.85) !important;
+            backdrop-filter: blur(8px) !important;
+            
+            /* 6. 重置所有可能干扰的属性 */
+            transform: none !important;
             border-radius: 0 !important;
+            margin: 0 !important;
             padding: 0 !important;
+        }
+
+        /* 确保文字颜色是白色的 */
+        #status-overlay div {
+            color: #ffffff !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
     </style>
@@ -1934,20 +1952,21 @@
         // ==========================================
         function showStatus(msg) { 
             const o = document.getElementById('status-overlay'); 
-            
-            // 🔥 核心修改：用 HTML 强制让文字在圈圈下面，并居中
+            if (!o) {
+                console.error("Error: #status-overlay div is missing!");
+                return;
+            }
+
             o.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-                    <!-- 圈圈 -->
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
                     <div class="modern-loader"></div>
-                    
-                    <!-- 文字：加大字号，加宽间距，白色高亮 -->
-                    <div style="margin-top: 25px; font-size: 18px; font-weight: 500; color: #ffffff; letter-spacing: 1px; max-width: 80%; line-height: 1.5;">
+                    <div style="margin-top: 25px; font-size: 18px; font-weight: 500; color: #fff;">
                         ${msg}
                     </div>
                 </div>
             `; 
             
+            // 🔥 关键：必须设置 flex 它才会出来
             o.style.display = 'flex'; 
         }
         function hideStatus() { document.getElementById('status-overlay').style.display = 'none'; }
