@@ -601,6 +601,7 @@
         const issueLayerGroup = L.layerGroup();
         let issuesData = null;
         let isInResultView = false;
+        let analysisAbortController = null; 
 
         const ui = {
             controlPanel: document.getElementById('control-panel'),
@@ -722,7 +723,17 @@
             
             document.addEventListener("keydown", e => {
                 if (e.key === "Escape") {
+                    // 🔥 优先级 1：如果正在加载/分析，按 ESC 取消分析
+                    const overlay = document.getElementById('status-overlay');
+                    if (overlay && overlay.style.display !== 'none') {
+                        cancelCurrentAnalysis();
+                        return; // 取消后不再执行下面的关闭弹窗逻辑
+                    }
+
+                    // 优先级 2：关闭普通弹窗
                     document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(modal => modal.classList.add('hidden'));
+                    
+                    // 优先级 3：如果在结果页，返回搜索页
                     if (isInResultView) {
                         showSearchView();
                     }
@@ -1306,25 +1317,48 @@
         }
 
         async function triggerGeoIntelAnalysis(lat, lon, locationName) {
-            showStatus(`Analyzing ${locationName}...`);
+            // 1. 如果之前有还在跑的任务，先取消掉
+            if (analysisAbortController) {
+                analysisAbortController.abort();
+            }
+            // 2. 创建新的控制器
+            analysisAbortController = new AbortController();
+            const signal = analysisAbortController.signal;
+
+            // 提示用户可以按 ESC
+            showStatus(`Analyzing ${locationName}... <br><span style="font-size:12px; opacity:0.8">(Press ESC to Cancel)</span>`);
+            
             try {
                 const payload = { lat, lon, buffer_degree: 0.1, analysis_type: currentGeoIntelMode };
-                // [FINAL FIX] - Use the fetchApi wrapper
-                const submitResponse = await fetchApi(`${API_BASE_URL}/api/v9/analyze`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                
+                // 🔥 注意：在 fetchApi 的第二个参数里加上 signal
+                const submitResponse = await fetchApi(`${API_BASE_URL}/api/v9/analyze`, { 
+                    method: "POST", 
+                    headers: { "Content-Type": "application/json" }, 
+                    body: JSON.stringify(payload),
+                    signal: signal // 绑定信号
+                });
+
                 if (!submitResponse.ok) throw new Error(`API submit failed with status ${submitResponse.status}`);
                 const submitData = await submitResponse.json();
                 const statusUrl = `${API_BASE_URL}${submitData.status_endpoint}`;
                 
                 const pollStatus = async (url) => {
-                    // [FINAL FIX] - Use the fetchApi wrapper
-                    const statusResponse = await fetchApi(url);
+                    // 🔥 轮询请求也要绑定 signal
+                    const statusResponse = await fetchApi(url, { signal: signal });
                     const statusData = await statusResponse.json();
+                    
                     if (statusData.status === "COMPLETED" || statusData.status === "FAILED") return statusData;
+                    
+                    // 等待 2秒 (如果 signal 被中止，这里不会继续执行后续请求)
                     await new Promise(resolve => setTimeout(resolve, 2000));
                     return pollStatus(url);
                 };
                 
                 const finalResult = await pollStatus(statusUrl);
+                
+                // 任务完成，清空控制器
+                analysisAbortController = null;
                 hideStatus();
 
                 if (finalResult.status === "COMPLETED") {
@@ -1334,9 +1368,17 @@
                     throw new Error(finalResult.result.error || "Analysis task failed.");
                 }
             } catch (e) {
+                // 🔥 捕获取消错误，不弹窗报错
+                if (e.name === 'AbortError') {
+                    console.log("Fetch aborted cleanly.");
+                    hideStatus();
+                    return; // 直接退出，不执行下面的 alert
+                }
+
                 hideStatus();
                 showActionTooltip(`Analysis Error: ${e.message}`);
                 fullReset(false);
+                analysisAbortController = null;
             }
         }
 
@@ -2041,6 +2083,27 @@
         
         function toggleForecastPanel() {
             ui.forecastPanel.classList.toggle('expanded');
+        }
+
+        // 🔥 新增函数：取消当前的分析任务
+        // ==========================================
+        function cancelCurrentAnalysis() {
+            if (analysisAbortController) {
+                // 1. 发送中止信号，这将导致 fetch 抛出 AbortError
+                analysisAbortController.abort();
+                analysisAbortController = null;
+                
+                // 2. 隐藏加载动画
+                hideStatus();
+                
+                // 3. (可选) 移除点击生成的红色图钉，恢复地图干净
+                if (clickMarker) {
+                    map.removeLayer(clickMarker);
+                    clickMarker = null;
+                }
+
+                console.log("Analysis cancelled by user (ESC).");
+            }
         }
         
         async function startRadarAnimation() {
