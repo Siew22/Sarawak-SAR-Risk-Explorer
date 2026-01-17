@@ -952,6 +952,8 @@
 
         // 1. 渲染 Popup 内容 (Web端修复版：含删除、宽容分类、防缓存)
         // ==========================================
+        // 1. 渲染 Popup 内容 (修复 Web 端图片加载问题)
+        // ==========================================
         async function renderPopupContent(reportId) {
             const container = document.getElementById(`popup-content-${reportId}`);
             if (!container) return;
@@ -967,14 +969,37 @@
                     return;
                 }
 
-                // 🔥 修改 1: 加时间戳 _t=${Date.now()} 防止浏览器缓存，保证看到最新评论
+                // 1. 获取评论
                 const commentsResponse = await fetchApi(`${API_BASE_URL}/api/v1/reports/${reportId}/comments?_t=${Date.now()}`);
                 const comments = commentsResponse.ok ? await commentsResponse.json() : [];
 
-                const imageUrl = issue.photo_url.replace(/\\/g, '/');
-                const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}/${imageUrl}`;
+                // 2. 准备图片 URL
+                // 注意：如果 photo_url 为空，需要处理
+                let fullImageUrl = "";
+                let imageHtml = "";
+                const uniqueImgId = `issue-img-${reportId}`;
 
-                // 🔥 修改 2: 宽容的分类逻辑 (忽略大小写，包含关键词即可)
+                if (issue.photo_url) {
+                    const imageUrl = issue.photo_url.replace(/\\/g, '/');
+                    fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}/${imageUrl}`;
+                    
+                    // 🔥 关键修改：
+                    // 1. 给 img 加上 id="${uniqueImgId}"
+                    // 2. 默认 display: none (隐藏)，等下载好了再显示
+                    // 3. 加一个 loading 的提示
+                    imageHtml = `
+                        <div style="min-height: 150px; background: #222; display: flex; align-items: center; justify-content: center; border-radius: 4px; margin-bottom: 10px;">
+                            <img id="${uniqueImgId}" style="width: 100%; border-radius: 4px; display: none;" alt="Issue photo"/>
+                            <span id="${uniqueImgId}-loader" style="color: #888; font-size: 12px;">
+                                <i class="fa-solid fa-spinner fa-spin"></i> Loading Image...
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    imageHtml = `<div style="padding:10px; background:#333; color:#aaa; text-align:center; margin-bottom:10px; border-radius:4px;">No Image Available</div>`;
+                }
+
+                // 3. 评论分类逻辑
                 const normalizeVote = (v) => v ? String(v).toLowerCase().trim() : 'unknown';
                 const getVoteType = (c) => {
                     const v = normalizeVote(c.vote);
@@ -985,21 +1010,18 @@
 
                 const agreeComments = comments.filter(c => getVoteType(c) === 'agree');
                 const disagreeComments = comments.filter(c => getVoteType(c) === 'disagree');
-                // 把无法分类的评论也抓出来显示
                 const otherComments = comments.filter(c => getVoteType(c) === 'unknown');
 
-                // 辅助函数：生成列表 HTML
                 const generateListHtml = (listData, showDebug = false) => {
                     if (!listData || listData.length === 0) return '';
                     return listData.map(c => {
                         let name = c.owner?.username || c.username || "Anonymous";
-                        // 如果无法分类，显示红色原数据方便调试
                         const debugInfo = (showDebug && c.vote) ? `<span style="color:#ff6b6b; font-size:10px;">(Raw: "${c.vote}")</span>` : '';
                         return `<li style="margin-bottom: 4px;"><strong>${name}:</strong> ${c.comment_text} ${debugInfo}</li>`;
                     }).join('');
                 };
 
-                // 表单逻辑
+                // 4. 表单逻辑
                 const totalComments = comments.length;
                 let formHtml = '';
                 if (totalComments >= 10) {
@@ -1016,7 +1038,7 @@
                     `;
                 }
 
-                // 🔥 修改 3: 如果当前用户是发布者 (User ID 1)，显示删除按钮
+                // 5. 删除按钮逻辑
                 const currentUserId = 1; 
                 let deleteButtonHtml = '';
                 if (issue.user_id === currentUserId) {
@@ -1028,10 +1050,13 @@
                     `;
                 }
 
+                // 6. 组装 HTML
                 container.innerHTML = `
                     <h5 style="text-transform: capitalize; margin: 0 0 5px 0;">${issue.report_type.replace('_', ' ')}</h5>
                     <p style="margin: 0 0 10px 0; font-size: 12px;">${issue.description}</p>
-                    <img src="${fullImageUrl}" style="width: 100%; border-radius: 4px;" alt="Issue photo"/>
+                    
+                    ${imageHtml} <!-- 这里插入刚才准备好的图片结构 -->
+
                     <small style="display: block; text-align: right; color: #888; margin-top: 5px;">Reported on ${new Date(issue.created_at).toLocaleDateString()}</small>
                     <hr style="border-top: 1px solid #444; margin: 10px 0;">
                     
@@ -1050,10 +1075,18 @@
                 const form = container.querySelector('.comment-form');
                 if (form) form.addEventListener('submit', handleCommentSubmit);
 
-                // 🔥 绑定删除按钮事件
                 const deleteBtn = document.getElementById(`btn-delete-${issue.id}`);
                 if (deleteBtn) {
                     deleteBtn.addEventListener('click', () => handleDeleteReport(issue.id));
+                }
+
+                // 🔥 关键步骤：触发异步加载
+                // 只有当图片 URL 存在时才去加载
+                if (fullImageUrl) {
+                    loadSecureImage(fullImageUrl, uniqueImgId).then(() => {
+                        const loader = document.getElementById(`${uniqueImgId}-loader`);
+                        if(loader) loader.style.display = 'none';
+                    });
                 }
 
             } catch (error) {
