@@ -128,7 +128,7 @@ with st.sidebar:
             # 这里做个兼容：如果是本地路径，直接读；如果是 URL，也可以
             clean_path = report_data['photo_url'].replace("\\", "/")
             if os.path.exists(clean_path):
-                st.image(clean_path, caption=f"Time: {report_data['created_at']}", use_column_width=True)
+                st.image(clean_path, caption=f"Time: {report_data['created_at']}", width="stretch")
             else:
                 st.warning("⚠️ Photo file missing locally.")
         
