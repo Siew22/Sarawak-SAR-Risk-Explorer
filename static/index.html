@@ -962,41 +962,17 @@
 
         function populateIssuesLayer(issues) {
             issueLayerGroup.clearLayers();
+            const issueIcon = L.divIcon({
+                html: '<i class="fa-solid fa-triangle-exclamation" style="color: #ffc107; font-size: 20px; text-shadow: 0 0 3px black;"></i>',
+                className: 'issue-marker-icon',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
 
             issues.forEach(issue => {
-                // --- 1. 默认样式 (Pending - 黄色) ---
-                let color = '#ffc107'; // 黄色
-                let iconClass = 'fa-triangle-exclamation'; // 感叹号
-                let statusText = 'Pending Investigation';
-
-                // --- 2. 🔥 DEMO 魔法：指定 ID 变绿 (已修复) ---
-                // 把 25 改成你想要变绿的那个 ID
-                if (issue.id === 25) { 
-                    color = '#28a745'; // 绿色
-                    iconClass = 'fa-circle-check'; // 打勾
-                    statusText = 'Resolved (Fixed)';
-                }
-
-                // --- 3. 生成图标 ---
-                const dynamicIcon = L.divIcon({
-                    html: `<i class="fa-solid ${iconClass}" style="color: ${color}; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);"></i>`,
-                    className: 'issue-marker-icon',
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12]
-                });
-
-                // --- 4. 添加 Marker ---
-                const marker = L.marker([issue.latitude, issue.longitude], { icon: dynamicIcon });
+                const marker = L.marker([issue.latitude, issue.longitude], { icon: issueIcon });
                 marker.reportId = issue.id;
-                
-                // 弹窗内容也跟着变色
-                marker.bindPopup(`<div id="popup-content-${issue.id}" style="width: 280px; max-height: 400px; overflow-y: auto;">
-                                    <div style="color:${color}; font-weight:bold; margin-bottom:5px; border-bottom:1px solid #444; padding-bottom:5px;">
-                                        <i class="fa-solid ${iconClass}"></i> Status: ${statusText}
-                                    </div>
-                                    Loading details...
-                                  </div>`);
-                                  
+                marker.bindPopup(`<div id="popup-content-${issue.id}" style="width: 280px; max-height: 400px; overflow-y: auto;">Loading details...</div>`);
                 marker.on('click', (e) => { map.setView(e.latlng, 16); });
                 marker.on('popupopen', () => { renderPopupContent(issue.id); });
                 issueLayerGroup.addLayer(marker);
