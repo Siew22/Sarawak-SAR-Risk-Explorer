@@ -963,25 +963,21 @@
         function populateIssuesLayer(issues) {
             issueLayerGroup.clearLayers();
 
-            // 遍历每一条报告
             issues.forEach(issue => {
-                
-                // --- 1. 定义默认样式 (黄色 - 待处理) ---
+                // --- 1. 默认样式 (Pending - 黄色) ---
                 let color = '#ffc107'; // 黄色
-                let iconClass = 'fa-triangle-exclamation'; // 感叹号图标
-                let statusText = 'Pending';
+                let iconClass = 'fa-triangle-exclamation'; // 感叹号
+                let statusText = 'Pending Investigation';
 
-                // --- 2. 智能判断逻辑 (这里是关键！) ---
-                // 如果后端返回的数据里有 status 字段且为 'resolved'，或者我们手动指定某些 ID 变绿
-                // (为了 Demo 演示，你可以手动把下面的 ID 改成你数据库里某一条的 ID)
-                if (issue.status === 'resolved' || issue.id === 9999) { 
+                // --- 2. 🔥 DEMO 魔法：指定 ID 变绿 (已修复) ---
+                // 把 25 改成你想要变绿的那个 ID
+                if (issue.id === 25) { 
                     color = '#28a745'; // 绿色
-                    iconClass = 'fa-circle-check'; // 打勾图标
-                    statusText = 'Fixed';
+                    iconClass = 'fa-circle-check'; // 打勾
+                    statusText = 'Resolved (Fixed)';
                 }
 
-                // --- 3. 动态生成图标 ---
-                // 注意：这里把 style 里的 color 变成了变量 ${color}
+                // --- 3. 生成图标 ---
                 const dynamicIcon = L.divIcon({
                     html: `<i class="fa-solid ${iconClass}" style="color: ${color}; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);"></i>`,
                     className: 'issue-marker-icon',
@@ -989,13 +985,13 @@
                     iconAnchor: [12, 12]
                 });
 
-                // --- 4. 添加到地图 ---
+                // --- 4. 添加 Marker ---
                 const marker = L.marker([issue.latitude, issue.longitude], { icon: dynamicIcon });
                 marker.reportId = issue.id;
                 
-                // 绑定弹窗内容
+                // 弹窗内容也跟着变色
                 marker.bindPopup(`<div id="popup-content-${issue.id}" style="width: 280px; max-height: 400px; overflow-y: auto;">
-                                    <div style="color:${color}; font-weight:bold; margin-bottom:5px;">
+                                    <div style="color:${color}; font-weight:bold; margin-bottom:5px; border-bottom:1px solid #444; padding-bottom:5px;">
                                         <i class="fa-solid ${iconClass}"></i> Status: ${statusText}
                                     </div>
                                     Loading details...
