@@ -962,17 +962,45 @@
 
         function populateIssuesLayer(issues) {
             issueLayerGroup.clearLayers();
-            const issueIcon = L.divIcon({
-                html: '<i class="fa-solid fa-triangle-exclamation" style="color: #ffc107; font-size: 20px; text-shadow: 0 0 3px black;"></i>',
-                className: 'issue-marker-icon',
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-            });
 
+            // 遍历每一条报告
             issues.forEach(issue => {
-                const marker = L.marker([issue.latitude, issue.longitude], { icon: issueIcon });
+                
+                // --- 1. 定义默认样式 (黄色 - 待处理) ---
+                let color = '#ffc107'; // 黄色
+                let iconClass = 'fa-triangle-exclamation'; // 感叹号图标
+                let statusText = 'Pending';
+
+                // --- 2. 智能判断逻辑 (这里是关键！) ---
+                // 如果后端返回的数据里有 status 字段且为 'resolved'，或者我们手动指定某些 ID 变绿
+                // (为了 Demo 演示，你可以手动把下面的 ID 改成你数据库里某一条的 ID)
+                if (issue.status === 'resolved' || issue.id === 9999) { 
+                    color = '#28a745'; // 绿色
+                    iconClass = 'fa-circle-check'; // 打勾图标
+                    statusText = 'Fixed';
+                }
+
+                // --- 3. 动态生成图标 ---
+                // 注意：这里把 style 里的 color 变成了变量 ${color}
+                const dynamicIcon = L.divIcon({
+                    html: `<i class="fa-solid ${iconClass}" style="color: ${color}; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);"></i>`,
+                    className: 'issue-marker-icon',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                // --- 4. 添加到地图 ---
+                const marker = L.marker([issue.latitude, issue.longitude], { icon: dynamicIcon });
                 marker.reportId = issue.id;
-                marker.bindPopup(`<div id="popup-content-${issue.id}" style="width: 280px; max-height: 400px; overflow-y: auto;">Loading details...</div>`);
+                
+                // 绑定弹窗内容
+                marker.bindPopup(`<div id="popup-content-${issue.id}" style="width: 280px; max-height: 400px; overflow-y: auto;">
+                                    <div style="color:${color}; font-weight:bold; margin-bottom:5px;">
+                                        <i class="fa-solid ${iconClass}"></i> Status: ${statusText}
+                                    </div>
+                                    Loading details...
+                                  </div>`);
+                                  
                 marker.on('click', (e) => { map.setView(e.latlng, 16); });
                 marker.on('popupopen', () => { renderPopupContent(issue.id); });
                 issueLayerGroup.addLayer(marker);
